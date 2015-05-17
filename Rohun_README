@@ -1,0 +1,15 @@
+Read this README to gain an idea about the functiosn of different files : 
+
+
+1. auxilary.py : this contains auxilary functios used by the other python files
+2. auxilary_backup is just a copy of the above file. Last checked it was the same file on 27th Feb 4:32
+
+3. trial.py 
+
+
+##############################
+INPUT FILE FORMAT
+The input files are named as such. The general formulation is:
+First line : the first integer is the number of obstacles and the second integer is the number of dimensions
+#################
+
