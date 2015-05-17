@@ -1,4 +1,4 @@
-cs251-assign
+UGP-Robotics
 ============
 
-cs251 assignments
+Implemented the Silhoutte Method
