@@ -2,20 +2,12 @@
 import numpy as np
 import numpy.linalg as linalg
 import sys
-import fileinput
+
 from auxilary import *
 from graph import *
 from plot import *
 import time
 
-
-##Inout Explained
-# This is a global variable that dictates tha state of the slice wrt to different ellipses
-
-# State 1 : means the slice is intersecting and had intersected in the last slice.
-# State 2 : means the slice has just started intersecting
-# State 3 : means the slice has just stopped intersecting
-# State 0 : means the slice is NOT intersecting and had NOT interseted in the last slice 
 
 
 #ELLINQUES:

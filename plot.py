@@ -26,7 +26,7 @@ def plotthis(num,ellips,ellarr, tree, adjval):		#module from the net
 		    for j in range(len(x)):
 		        [x[i,j],y[i,j],z[i,j]] = np.dot([x[i,j],y[i,j],z[i,j]], rotation) + center
 
-		if k==0:
+		if k==0:		#Different colors
 			ax.plot_wireframe(x, y, z,  rstride=4, cstride=4, color='b', alpha=0.2)
 		else:
 			ax.plot_wireframe(x, y, z,  rstride=4, cstride=4, color='r', alpha=0.2)
