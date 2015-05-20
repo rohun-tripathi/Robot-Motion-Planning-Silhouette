@@ -4,6 +4,8 @@
 
 #primA stores the terms for the primary axis. The one to traverse along on the first iteration
 
+#Presslice is to avoid any kind of recursion in first slice due to change in Critical points, the starting point
+
 #imports
 #!usr/bin/env python
 import numpy as np
@@ -43,13 +45,16 @@ iterate = 100 	#Something like space parts to complete traversal
 def method(travaxis,vector, startpt, crit, presslice):	#traversal axis
 	global valcount,num,dim,adj,adjval;
 	
-	metreturn = []			#Will be returned as "pastvector" for next slice
-	pastvector = []			#From the previous iteration, slice
+
 	
 	vector[travaxis] = startpt	
 	inplace = vector[:]		#inplace used only in next line
 	adjval.append(inplace)	#first point appended
-	metreturn.append(valcount); #VERY IMP
+	
+	metreturn = []					#Will be returned as "pastvector" for next slice
+	metreturn.append(valcount); 	#Appended one end. Append the other end in the last iteration
+	
+	pastvector = []			#From the previous iteration, slice
 	pastvector.append(valcount); valcount+=1;		#DO NOT APPEND BEFORE SENDING!!!!!
 	cpt = 1 				#Critical point		
 	
@@ -66,87 +71,86 @@ def method(travaxis,vector, startpt, crit, presslice):	#traversal axis
 		itercpt = 0			#Critical Points in this iteration
 		atleastone = 0		#tracks if the plane intersects atleast one ellipse and if linking has to be done
 
-		if crit == None:	#If the critical points from higher recursion is ziltch
-			pass
-		elif (vector[travaxis] >= crit[travaxis] and crit[travaxis] > vector[travaxis] - ((startpt)*(-2))/(iterate-1)):
-			#print "found ", crit[travaxis], "between ", vector[travaxis], vector[travaxis] - ((startpt)*(-2))/(iterate-1)
-			vector[travaxis] = crit[travaxis]
-			crit_temp = crit[:];
-			CV.append(crit_temp); itercpt += 1;
-			#time.sleep(2)
-			count -= 1 		#If the crit is not ziltch, then goto the slice in question and also reduce this count coz it has to be done later
+		if crit != None:	#If the critical points from higher recursion is not ziltch
+			if (vector[travaxis] >= crit[travaxis] and crit[travaxis] > vector[travaxis] - ((startpt)*(-2))/(iterate-1)):
+				#print "Found ", crit[travaxis], "between ", vector[travaxis], vector[travaxis] - ((startpt)*(-2))/(iterate-1)
+				vector[travaxis] = crit[travaxis]
+				crit_temp = crit[:];
+				CV.append(crit_temp);
+				itercpt += 1;
+				
+				count -= 1 					#If the crit is not ziltch, then goto the slice in question and also reduce this count coz it has to be done later
 		
-		ellinques = -1	#assuming at one instant, only one new ellipse is added to the network to be encompassed
+		ellinques = -1						#assuming at one instant, only one new ellipse is added to the network to be encompassed
 		axis2 = travaxis;
-		for fg in range(0,2):	#This 0,2 was because of limit to 3 dimensions in this case
+		for fg in range(0,2):				#This 0,2 was because of limit to 3 dimensions in this case
 			axis2 = axis2 + 1
-			if axis2 < dim:
-				pass
-			else:
+			if not axis2 < dim:				#Axis2 should be less tham dim
 				break;
+
+
 			for index,ellipse in enumerate(ellarr):		#looping over each ellipse for the given slice
-				origin = ellips[index]
-				#print "\norigin and vector = ", origin, vector
+				origin = ellips[index]					#print "\norigin and vector = ", origin, vector
 				solution, valid = intersect(ellipse, origin, vector, axis2)		#maxima along next axis
 				if valid == 1:
+					atleastone = 1;			#used later, it means it does or does not need to link this point
+
 					#check that each point is actully valid and not entering another ellipse!
+					#STill have not written that code
+					
 					if inout[index] == 2:		#Comments on inout in complement	
 						inout[index] = 1
 					if inout[index] == 0:
 						inout[index] = 2
 						ellinques = index
-					atleastone = 1;			#used later, it means it does or does not need to link this point
-
+					
 					if solution[1] != solution[0]:	#two point as compared to one in the caseof a critcial slice!
 						itercpt += 2;				#iteration cpts
 
 						vector2 = vector[:]; 			vector2[axis2] = solution[0]
 						vector3 = vector[:]; 			vector3[axis2] = solution[1]
-						if vector2 != crit:
-							fvalid = f(dim,num,vector2,ellips,ellarr)	#f(..) always returns 1
-							if fvalid == 1:
-								V.append(vector2); 	
-						if vector3 != crit:
-							fvalid = f(dim,num,vector3,ellips,ellarr)	#f(..) always returns 1
-							if fvalid == 1:
-								V.append(vector3);
-					else:
+						V.append(vector2); 	
+						V.append(vector3); 	
+						# if vector2 != crit:
+						# 	fvalid = f(dim,num,vector2,ellips,ellarr)	#f(..) always returns 1
+						# 	if fvalid == 1:
+						# 		V.append(vector2); 	
+						# if vector3 != crit:
+						# 	fvalid = f(dim,num,vector3,ellips,ellarr)	#f(..) always returns 1
+						# 	if fvalid == 1:
+						# 		V.append(vector3);
+
+					else:							#Solutions equal in casen of a critcial slice!
 						itercpt += 1;				#one in the caseof a critcial slice!
-						#print "Solution when equal == ", solution, vector
-						#time.sleep(2)				
 						vector2 = vector[:]; 			vector2[axis2] = solution[0]
 						if vector2 != crit:
 							CV.append(vector2); 			#NO Doubt about validity	
-														#Ithink CV used here to disambiguate from the other points added to roadmap at this stage	
-				else:
-					if inout[index] == 1 or inout[index] == 2:	#Comments on inout in complement
+															#CV used here to disambiguate from the other points (V) added to roadmap this iteration
+
+				else:								#If NOT valid
+					if inout[index] == 1 or inout[index] == 2:	#Comments on inout in complement, State 1 or 2 means inside.
 						inout[index] = 3
 						ellinques = index
 					else:
 						inout[index] = 0
-					pass
 					#print "Invalid for count== ", count, " vector== ", vector, "ellipse== ", index
-		#print "\nsolution, vector, V, axis2, itercpt, presslice", solution, vector, V, axis2, itercpt, presslice
-		#time.sleep(.5)
 		
-		axis2 =travaxis + 1;
-		if itercpt != cpt:				#This only happens if some intersections of the particular slice with atleast one ellipse
-			print "\nCHANGE : solution, vector, V, axis2, itercpt, presslice", solution, vector, V, axis2, itercpt, presslice
-			#time.sleep(2)
+		axis2 =travaxis + 1;			#Back in main while
 		
-		if count == iterate-1:			#Last iteration. Return to higher resursion
+		if itercpt != cpt: print "\nCHANGE : solution, vector, V, axis2, itercpt, presslice", solution, vector, V, axis2, itercpt, presslice
+		#This ^ only happens if some intersections of the particular slice with atleast one ellipse
+			
+		
+		if count == iterate-1:						#Last iteration. Return to higher resursion
 			pastvector, valcount , adjval, adj = complete_link(pastvector, V, CV, valcount, adjval, adj)
-			metreturn.append(valcount-1);
-			#print "\n\nappended to metreturn == ", valcount
-	
-			#print "\n\nSlicing done as travaxis = ",travaxis
+			metreturn.append(valcount-1);			#Appended to metreturn the last point of previous iteration
 			return metreturn
 
-		if atleastone == 0:
-			continue;			#it means it does not need to connect this point, no linking
+		if atleastone == 0:			#it means it does not need to connect in this iteration, no linking
+			continue;				#This is the main while(1) loop
 		
 		##########################
-		#The nest part is of linking in different manners. Simple linking (link)
+		#The next part is of linking in different manners. Simple linking (link)
 		#reverse linking (link_special) for Critical slice cases
 		# In the case of the critical slice the approppriate recursion is called unless the system is in the base case(2D)
 		# In base case connected by point
@@ -172,7 +176,7 @@ def method(travaxis,vector, startpt, crit, presslice):	#traversal axis
 				else:
 					if crit == None:
 						solution, valid = cpfind(ellarr[ellinques],ellips[ellinques],vector,travaxis,axis2)	#crit plane creator
-						#print "solution from cpfind == ", solution, vector, valid
+						
 						tempv1 = vector[:]
 						v2 = vector[:]
 						
@@ -186,20 +190,18 @@ def method(travaxis,vector, startpt, crit, presslice):	#traversal axis
 							one  = np.array(tempv1)
 						 	four = linalg.norm( one - two )
 						 	if three<four:
-						 		tempv1[travaxis] = solution[0]			#Find the one closer to the vector
-						 	#else leave it as it is
-							max2minus = 0;			#need to calculate maxminus
-							solution, valid = intersect(ellarr[0],ellips[0], tempv1, (axis2))		#always check maxima along the next axis
-							if(solution[0]  < 0):
+						 		tempv1[travaxis] = solution[0]			#Find the closer criticl point for respective ellipse to the vector
+						 												#else leave it as it is
+							
+							max2minus = 0;								#need to calculate maxminus
+							solution, valid = intersect(ellarr[0],ellips[0], tempv1, (axis2))			#always check maxima along the next axis
+							max2minus = solution[1]						#find the point on the primry to start recursion
+							if(solution[0]  < 0):					
 								max2minus = solution[0]
-							else:
-								max2minus = solution[1]		#find the point on the primry to start recursion
+							
 							critical = tempv1[:]
 							critical[axis2] = ellips[ellinques][axis2]			#crit creation
 							
-							#print "solution for calling == ", tempv1, max2minus, critical
-							#time.sleep(2)
-
 							temvector = method(axis2 , tempv1, max2minus, critical, 1)		#RECURSION
 							past2vector, valcount, adjval, adj = link(temvector, V, CV, valcount, adjval, adj)
 							adj = link_special(temvector,pastvector,adjval,adj)
@@ -548,6 +550,10 @@ method(travaxis, vector, maxminus, critical, presslice)
 #print tree
 #for x in range(0,adj):
 print "adj == ",adj;
+
+adjout = open("adjout.txt","w")
+for term in adj:
+	print >> adjout, term;
 
 # fig = plt.figure(i)
 
