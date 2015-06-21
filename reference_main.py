@@ -1,54 +1,44 @@
-## This the introduction, a readme of sorts
-#ellips is a list of lists. List of the origins of the nth ellipse
-#ellarr stores the A matrix for diff ellipses
 
-#primA stores the terms for the primary axis. The one to traverse along on the first iteration
-
-#Presslice is to avoid any kind of recursion in first slice due to change in Critical points, the starting point
-
-#imports
 #!usr/bin/env python
 import numpy as np
 import numpy.linalg as linalg
 import matplotlib.pyplot as plt
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
-import sys
-import time
-import random
-import fileinput
+import sys, time, random
 
-from auxilary import *
-from graph import *
-from plot import *
-from complement import *
+
+import auxilary as aux
+import graph as graph
+import plot as myplt
+import comlplement as cmpl #Actually use this
 
 
 
-
-ellips = []		#stores the origin (center) values for diff ellipses
-ellarr = []		#stores the A matrix for diff ellipses
-adj = []; adjval = []; valcount = 0; num = 0;
-
-#	valcount keeps the count of the value of the poitn being added to the adjacency tree
-#	the adj is the list of edges that being created
-#	the adjval gives the dimension coordinates (for plotting for the nth point)
-
-dim = 0;primA = []; inout = [];
-#primA stores the terms for the primary axis. The one to traverse along on the first iteration
-#The Inout gives the status of whether a particular slice is inside or outside of the ellipse in question
+originlist = []		# stores the origin (center) values for diff ellipses
+ellipselist = []	# stores the A matrix for diff ellipses
+adjmatrix = []; 	# the adjmatrix is the list of edges that being created
+adjval = [];		# the adjval gives the dimension coordinates (for plotting for the nth point)
+valcount = 0; 		# valcount keeps the count of the value of the poitn being added to the adjacency tree
+primA = []	#primA stores the terms for the primary axis. The one to traverse along on the first iteration
 
 iterate = 100 	#Something like space parts to complete traversal
 
+num = 0;
+dim = 0;
+
 #The main method
 
-def method(travaxis,vector, startpt, crit, presslice):	#traversal axis
-	global valcount,num,dim,adj,adjval;
+def method(travaxis, critical):
+	global originlist, ellipselist, adjmatrix, adjval, valcount,num,dim,iterate, primA
 	
+	statelist = []						#The statelistp gives the status of whether a particular slice is inside or outside of the ellipse in question
+	for x in range(0,len(ellipselist)):	# State dictates where a slice
+		statelist.append(0)				# interacts with the nth ellipse
+										# Called inout in earlier versions
+	slicevector = [0 for x in range(dim)]	#Starts with 0,0...
+	firstlink = 0
+	vector[travaxis] = -primA[travaxis];		#Start point of recursion
 
-	
-	vector[travaxis] = startpt	
-	adjval.append(vector[:])	#first point appended
+	adjval.append(slicevector[:])	#first point appended
 	
 	metreturn = []					#Will be returned as "pastvector" for next slice
 	metreturn.append(valcount); 	#Appended one end. Append the other end in the last iteration
@@ -484,17 +474,15 @@ def plotthis3():
 
 
 
-###This code assumes that the input format is correct and as in the adjoint README file
+###This code assumes that the input format is correct
 
-dim = 0
-num = 0
-inpfile = open("input3D.txt","r")#inp = open("input.txt","r")
-inp = inpfile.readlines()
+inp = open("input3D.txt","r").readlines()
 for index, l in enumerate(inp):
 	parts = l.strip().split()
 	if index == 0:
-		num = int(parts[0])				#num is the number of ellipses being checked
-		dim = int(parts[1]) 			#dim is for the dimensions being used
+		num = len(inp) - 1				#Number of ellipses = Number of lines - line for dim
+		dim = int(parts[0]) 			#dim is for the dimensions being used
+		continue
 	else:
 		if dim == 0:
 			print "error in input as dim = 0"
@@ -502,7 +490,7 @@ for index, l in enumerate(inp):
 		origin = []						#first detail in line is origin
 		for i in range(0,dim):
 			origin.append(float(parts[i]))
-		ellips.append(origin) 			#store the center values for the nth ellipse
+		originlist.append(origin) 			#store the center values for the nth ellipse
 		
 		carry = dim;					#carry tracks how many have been read and where to read from next
 		
@@ -514,8 +502,8 @@ for index, l in enumerate(inp):
 			Umatrix.append(Ulist)
 
 		Sigmalist = [] 					#holds the sigma matrix
-		carry = dim + dim*dim
-		for i in range(0,dim):
+		carry = dim + dim*dim 			#Carry gets updated after reads
+		for i in range(0,dim):			#Calculations for A of matrix
 			term = float(parts[i + carry])
 			inver = 1/(term*term)
 			Sigmalist.append(inver)
@@ -531,18 +519,12 @@ for index, l in enumerate(inp):
 		mult1 = np.dot(U,eye)
 		mult2 = np.dot(mult1,trans)		#A = U * eye * U.T
 		#print "A for this iteration = ", mult2
-		ellarr.append(mult2)
-
-for x in range(0,len(ellarr)):
-	inout.append(0)
+		ellipselist.append(mult2)
 
 travaxis = 0
-vector = [0 for x in range(dim)]
-maxminus = -primA[travaxis];
-critical = None
-presslice = 1
+critical = []
 
-method(travaxis, vector, maxminus, critical, presslice)
+method(travaxis, critical)
 
 #print "\n\nadj== ", adj
 #tree = main(valcount, adj)

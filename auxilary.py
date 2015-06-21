@@ -1,7 +1,40 @@
 import numpy as np
-import sys
+import sys, time
 import numpy.linalg as linalg
 import math
+
+import shared as SH
+import auxilary as aux
+import graph as graph
+import plot as myplt
+import complement as cmpl #Actually use this
+import cpfunctions
+import rdfunctions
+
+#####################
+# function Complete_link - 
+# links the the present vector points in V and past vector points in P
+# creates adjacency list adj. adjval stores the point in N dimension for each point index
+# returns the index of vectors in V corresponding to numbers in adjval 
+# The functionality pf link has been understood and the others are just variations as per needs
+def complete_link(P, V, debug = False):			#past and now vector
+	if debug == True: 
+		print "In Complete Link, Pastvector and Present-vector== ", P, V
+		print "Sleeping"
+		time.sleep(2)
+
+	
+	for i in range(0,len(V)):		
+		inf = 0; val = 23456789	#high value
+		for j in range(0,len(P)):
+			one = np.array( SH.adjcoordinates[V[i]] )
+			two = np.array( SH.adjcoordinates[P[j]] )
+			three = linalg.norm( one - two )
+		 	
+			if debug == True: print "In complete link, For the ", i, "the presentvector, the inf== ", inf
+			rdfunctions.AddToRoadmap( V[i], P[j], val, "complete_link")	#the weight is val
+	return V
+
 
 #####################
 # function link - 
@@ -9,203 +42,53 @@ import math
 # creates adjacency list adj. adjval stores the point in N dimension for each point index
 # returns the index of vectors in V corresponding to numbers in adjval 
 # The functionality pf link has been understood and the others are just variations as per needs
-def link(P, V, CV, valcount, adjval, adj):			#past and now vector
-	point = []
+def link(P, V, CV, debug = False):			#past and now vector
+	if debug == True: print "Pastvector and Present-vector and CV== ", P, V, CV
 
-	#print "p and V and CV== ", P, V, CV
 	for i in range(0,len(V)):		
 		inf = 0; val = 23456789	#high value
 		for j in range(0,len(P)):
-			one = np.array(V[i])
-			two = np.array( adjval[P[j]] )
+			one = np.array( SH.adjcoordinates[V[i]] )
+			two = np.array( SH.adjcoordinates[P[j]] )
 			three = linalg.norm( one - two )
-		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
-		 	#print "adjval == ", adjval
+		 	
 		 	if val >= three :
 		 		val = three
 		 		inf = P[j]
-		tempi = V[i][:]
-		#print "inf== ", inf
-		adjval.append(tempi)
-		adj.append([valcount,inf, val, "link"])	#the weight is val
-		point.append(valcount)
-		valcount += 1
+		if debug == True: print "For the ", i, "th presentvector, the inf== ", inf
+		rdfunctions.AddToRoadmap( V[i], inf, val, "link")	#the weight is val
+		
 	for i in range(0,len(CV)):		
 		inf = 0; val = 23456789	#high value
 		for j in range(0,len(P)):
-			one = np.array(CV[i])
-			two = np.array( adjval[P[j]] )
+			one = np.array( SH.adjcoordinates[CV[i]])
+			two = np.array( SH.adjcoordinates[P[j]] )
 			three = linalg.norm( one - two )
-		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
-		 	#print "adjval == ", adjval
+		 	
 		 	if val >= three :
 		 		val = three
 		 		inf = P[j]
-		tempi = CV[i][:]
-		#print "inf== ", inf
-		adjval.append(tempi)
-		adj.append([valcount,inf, val, "link"])	#the weight is val
-		point.append(valcount)
-		valcount += 1
-	return point, valcount, adjval, adj
-
-def link_special(P, V, adjval, adj):			#past and now vector
-	
-	#print "p and V== ", P, V
-	for i in range(0,len(V)):		
-		inf = 0; val = 23456789	#high value
-		for j in range(0,len(P)):
-			one = np.array( adjval[V[i]])
-			two = np.array( adjval[P[j]] )
-			three = linalg.norm( one - two )
-		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
-		 	#print "adjval == ", adjval
-		 	if val >= three :
-		 		val = three
-		 		inf = P[j]
-		#print "inf== ", inf
-		adj.append([inf,V[i], val, "link_special"])	#ULTA append!
-		
-	return adj
-
-def complete_link(P, V, CV, valcount, adjval, adj):			#past and now vector
-	point = []
-
-	#print "p and V and CV== ", P, V, CV
-	for i in range(0,len(V)):		
-		inf = 0; val = 23456789	#high value
-		
-		tempi = V[i][:]
-		adjval.append(tempi)
-		
-		for j in range(0,len(P)):
-			one = np.array(V[i])
-			two = np.array( adjval[P[j]] )
-			three = linalg.norm( one - two )
-		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
-		 	#print "adjval == ", adjval
-			adj.append([valcount,inf, val, "complete_link"])	#the weight is val
-		point.append(valcount)
-		valcount += 1
-	for i in range(0,len(CV)):		
-		inf = 0; val = 23456789	#high value
-		
-		tempi = CV[i][:]
-		adjval.append(tempi)
-		
-		for j in range(0,len(P)):
-			one = np.array(CV[i])
-			two = np.array( adjval[P[j]] )
-			three = linalg.norm( one - two )
-		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
-		 	#print "adjval == ", adjval
-		 	if val >= three :
-		 		val = three
-		 		inf = P[j]
-			adj.append([valcount,inf, val, "complete_link"])	#the weight is val
-		point.append(valcount)
-		valcount += 1
-	return point, valcount, adjval, adj
-
-#####################
-# Find the critical point along the cth axis for the nth axis (c is x and n is y)
-# A is the ellipse and X is the array with the points X = [x1, x2 ....]
-# This I am not sure if I have to under stand or not. The function itself is hard to decypher but I have the reference notes
-# Most probably this is chill, skipped
-# I remember the idea though. That is that one of the axes, the one just upper has been fixed to  val anf for that val, we have to solve in the 
-# lower dimension to get the Critacal point
-def cpfind(A,O,X,x,y):
-	rank=len(X)
-	templist = [[0,0,0] for i in range(0,rank)] #order: constant, x, y
-
-	for i in range(0, rank):
-		prod = 0;
-		for j in range(0,rank):
-			if j == x:
-				templist[i][1] += A[j][i]
-				templist[i][0] -= A[j][i] * (O[x])
-			elif j == y:
-				templist[i][2] += A[j][i]
-				templist[i][0] -= A[j][i] * (O[y])
-			else:
-				templist[i][0] += A[j][i] * (X[j]-O[j])
-		
-	#print "templist== ", templist
-
-	component = [0,0,0,0,0,0]			#represents a, b and c component
-		
-	for i in range(0,rank):
-		if i == x:
-			component[3] += templist[i][0]
-		elif i == y:
-			component[1] += templist[i][0]
-		else:
-			component[5] += templist[i][0] * (X[i]-O[i])
-	#doing for n
-	for i in range(0,rank):
-		if i == x:
-			component[4] += templist[i][2]
-		elif i == y:
-			component[0] += templist[i][2]
-		else:
-			component[1] += templist[i][2] * (X[i]-O[i])
-	#doing for c
-	for i in range(0,rank):
-		if i == x:
-			component[2] += templist[i][1]
-		elif i == y:
-			component[4] += templist[i][1]
-		else:
-			component[3] += templist[i][1] * (X[i]-O[i])
-
-	p = component[0]
-	r = component[1]
-	delt = component[2]
-	q = component[3]
-	s = component[4]
-
-
-	t = component[5] - 1
-
-	for i in range(0,len(templist)):
-		t -= templist[i][0] * O[i]
-	for i in range(0,len(templist)):
-		r -= templist[i][1] *  O[i]
-	for i in range(0,len(templist)):
-		q -= templist[i][2] *  O[i]
-
-	comp = [0,0,0]
-	comp[0] = (s * s) - (4 * delt * p)
-	comp[2] = q *q - 4* delt * t
-	comp[1] = 2*q* s - 4* delt * r
-	#print "componenet, comp== ",component, comp
-	solution,valid = solver(comp)
-	# for x in range(0,len(solution)):
-	# 	solution[x] += O[n-1]
-	
-	return solution,valid
+		if debug == True: print "For the ", i, "th CV, the inf== ", inf
+		rdfunctions.AddToRoadmap( CV[i], inf, val, "link")	#the weight is val
+	V.extend(CV)
+	return V
 
 #############################
 # Find the intersect point along the nth axis
-# A is the ellipse and X is the array with the points X = [x1, x2 ....]
-# This complex mahs code, not obvious straight
-# We will not be needin this largely as we have plane anc ellipse intersections now
+# A is the ellipse
+# X is the array with the points X = [x1, x2 ....]
+# O is the array with the origin
+# n is one of the axes after the travaxis
+
 def intersect(A,O,X,n, debug = False):
 
-	if debug == True: print "intersect called, axis = ", n
-	if debug == True:
-		A = [[1,2,3],[4,5,6],[7,8,9]]
-		for i in range(3):
-			for j in range(3):
-				A[i][j] += 1
-		O = [1,1,1]
-		X = [2,2,2]
-
 	rank=len(X)
-	templist = [[0,0] for i in range(0,rank)] #will be used for the first multiplication
-
+	
+	if debug == True: print "intersect called, axis = ", n
 	if debug == True: print "A and X and O == " ,A, X, O
 	if debug == True: print "Rank == ", rank
+	
+	templist = [[0,0] for i in range(0,rank)] #will be used for the first multiplication
 	
 	for i in range(0, rank):	#This will be the column in the A matrix
 		prod = 0;
@@ -234,11 +117,12 @@ def intersect(A,O,X,n, debug = False):
 	
 	solution,valid = solver(component)			#Solves ax^2 + bX + c = 0
 	if debug == True: print "Solution and valid after function solver", solution,valid
+	if debug == True: print "Substracting with the center, value of O[n-1], which is == ", O[n-1]
 	for x in range(0,len(solution)):
 		solution[x] += O[n-1]					#This is important. this is because we solved for (Xn - On), not just for Xn.
 
 	if debug == True: print "The returned values, solution and valid == ", solution, valid
-	if debug == True: gap = raw_input("")
+	if debug == True: gap = raw_input("Done with Intersect, Press Enter...")
 	return solution,valid
 
 
@@ -259,3 +143,64 @@ def solver(component):
 	solution.append(sol1)
 	solution.append(sol2)
 	return solution,1
+
+
+
+
+def link_special(P, V, adjval, adj):			#past and now vector
+	
+	#print "p and V== ", P, V
+	for i in range(0,len(V)):		
+		inf = 0; val = 23456789	#high value
+		for j in range(0,len(P)):
+			one = np.array( adjval[V[i]])
+			two = np.array( adjval[P[j]] )
+			three = linalg.norm( one - two )
+		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
+		 	#print "adjval == ", adjval
+		 	if val >= three :
+		 		val = three
+		 		inf = P[j]
+		#print "inf== ", inf
+		adj.append([inf,V[i][:], val, "link_special"])	#ULTA append!
+		
+	return adj
+
+# def complete_link(P, V, CV, valcount, adjval, adj):			#past and now vector
+# 	point = []
+
+# 	#print "p and V and CV== ", P, V, CV
+# 	for i in range(0,len(V)):		
+# 		inf = 0; val = 23456789	#high value
+		
+# 		tempi = V[i][:]
+# 		adjval.append(tempi)
+		
+# 		for j in range(0,len(P)):
+# 			one = np.array(V[i])
+# 			two = np.array( adjval[P[j]] )
+# 			three = linalg.norm( one - two )
+# 		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
+# 		 	#print "adjval == ", adjval
+# 			adj.append([valcount,inf, val, "complete_link"])	#the weight is val
+# 		point.append(valcount)
+# 		valcount += 1
+# 	for i in range(0,len(CV)):		
+# 		inf = 0; val = 23456789	#high value
+		
+# 		tempi = CV[i][:]
+# 		adjval.append(tempi)
+		
+# 		for j in range(0,len(P)):
+# 			one = np.array(CV[i])
+# 			two = np.array( adjval[P[j]] )
+# 			three = linalg.norm( one - two )
+# 		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
+# 		 	#print "adjval == ", adjval
+# 		 	if val >= three :
+# 		 		val = three
+# 		 		inf = P[j]
+# 			adj.append([valcount,inf, val, "complete_link"])	#the weight is val
+# 		point.append(valcount)
+# 		valcount += 1
+# 	return point, valcount, adjval, adj
