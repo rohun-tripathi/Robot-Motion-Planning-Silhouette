@@ -1,5 +1,7 @@
 Read this README to gain an idea about the functiosn of different files : 
 
+The RecursionPoints function can be improved. It does not account for the obstacle that starts and ends between two slices.
+
 Lists that are fucking with me:
 StateList - [0 for x in range( len(ellipselist) )]
 This makes it for ALL the ellipsoids that collide with slice in question

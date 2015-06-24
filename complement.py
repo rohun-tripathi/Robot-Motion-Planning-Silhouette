@@ -22,7 +22,6 @@ def processinput(originlist, ellipselist, debug=False):
 			for i in range(SH.dim):
 				origin.append(float(parts[i]))
 			originlist.append(origin) 			#store the center values for the nth ellipse
-			
 			carry = SH.dim;					#carry tracks how many have been read and where to read from next
 			
 			Umatrix = [] 					#holds the U matrix in 2d list form
@@ -51,6 +50,8 @@ def processinput(originlist, ellipselist, debug=False):
 			mult2 = np.dot(mult1,trans)		#A = U * eye * U.T
 			#print "A for this iteration = ", mult2
 			ellipselist.append(mult2)
+	print originlist
+	time.sleep(5)
 	return originlist, ellipselist
 
 

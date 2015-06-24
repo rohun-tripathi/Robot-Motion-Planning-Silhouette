@@ -23,7 +23,7 @@ def initialize (travaxis, parentvector, originlist, ellipselist, debug = False):
 	firstlink = 0							#I think this the value that is to be used to distinguish a change in intersection points due to critical points and due to first point in the slicing
 	
 	#Code for startpoint
-	sol, valid = aux.intersect(ellipselist[0], originlist[0], parentvector, travaxis)
+	sol, valid = aux.intersect(ellipselist[0], originlist[0], parentvector[(travaxis):], travaxis, False)
 	if valid != 1:
 		print "Error in rdfunctions in initialize function in calculation of start point of slicing"
 		print "This is a serious error and never should have come up. Exiting"

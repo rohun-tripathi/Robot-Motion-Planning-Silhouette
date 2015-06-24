@@ -12,6 +12,30 @@ import cpfunctions
 import rdfunctions
 
 #####################
+# links the the present vector points of the last slice of an obstacle to the previous slice
+# Mimics behaviour of complete_link, which is not other wise captured in last point of obstacle
+# diffList is the list of all points that have not been connected, and need to be connected 
+def endRecur_link (P, V, debug = False):			#P - past and V - Presentvector
+	linked = []
+	for i in range(0,len(V)):		
+		inf = 0; val = 23456789	#high value
+		for j in range(0,len(P)):
+			one = np.array( SH.adjcoordinates[V[i]] )
+			two = np.array( SH.adjcoordinates[P[j]] )
+			three = linalg.norm( one - two )
+		 	
+		 	if val >= three :
+		 		val = three
+		 		inf = P[j]
+		if debug == True: print "For the ", i, "th presentvector, the inf== ", inf
+		rdfunctions.AddToRoadmap( V[i], inf, val, "link")	#the weight is val
+		linked.append(inf)
+	diffList = [x for x in P if x not in linked]
+	if debug == True: print "diffList, linked, pastvector == ", diffList , linked, P
+	link(V, diffList, [], debug)
+
+
+#####################
 # function Complete_link - 
 # links the the present vector points in V and past vector points in P
 # creates adjacency list adj. adjval stores the point in N dimension for each point index
@@ -82,6 +106,11 @@ def link(P, V, CV, debug = False):			#past and now vector
 
 def intersect(A,O,X,n, debug = False):
 
+	#This is important
+	#n = 0
+	#This marks the change in strategy from last model to this one
+	#In the last model, the traversal went downward, in this the ellipses go downward, they are calculated for the lower dimentsion
+	#This means that the axis of traversal stays "0" for the present ellipse
 	rank=len(X)
 	
 	if debug == True: print "intersect called, axis = ", n

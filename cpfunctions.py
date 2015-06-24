@@ -7,7 +7,93 @@ import auxilary as aux
 import graph as graph
 import plot as myplt
 import complement as cmpl #Actually use this
+from copy import copy, deepcopy
 
+def RecurCheck (critical, presentslice, nextslice, debug = False):
+	CritAtThisSlice = []
+	if debug == True : print "In RecurCheck and critical, presentslice, nextslice == ", critical, presentslice, nextslice
+	for item in critical:
+		if presentslice < item[0][0] <= nextslice:	#The < and <= essentially means that the obstacle cannot be sticking to the first point in the arena
+			CritAtThisSlice.append(item)
+	return CritAtThisSlice
+
+def ReduceEllipsoids (considerlist, CriticalYZ, CPslicevector, travaxis, ellipselist, originlist, debug = False):
+	#For the first ellipse first
+	ellipse = deepcopy(ellipselist[0])
+	origin = originlist[0]
+
+	if debug == True: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
+	center2nd = np.array( CPslicevector[(travaxis + 1):] )
+	trans = center2nd.T
+	if debug == True: print "d and d.T == ", center2nd, trans
+	
+	numerator = 1 - np.dot(trans, center2nd)
+	if debug == True: print "numerator == ", numerator, "\n"
+
+	topcorner = ellipse[0][0]
+	planeState = CPslicevector[travaxis]
+	highercenter = origin[0]
+	if debug == True: print "topcorner, planeState, highercenter == ", topcorner, planeState, highercenter
+	
+	denominator = 1 - topcorner * (planeState - highercenter)  * (planeState - highercenter)	# denom = 1 - aii (a - ci ) ^ 2
+	if debug == True: print "denominator == ", denominator, "\n"
+
+	firstcenter = np.array( origin[1:] )
+	trans = firstcenter.T
+	oldmatrix = np.array( [x[1:] for x in ellipse[1:]  ])
+	if debug == True: print trans
+	if debug == True: print oldmatrix
+	if debug == True: print firstcenter
+	value = np.dot( np.dot( trans, oldmatrix ), firstcenter )
+
+	if debug == True: print value
+	denominator = denominator - value
+	if debug == True: print "denominator == ", denominator, "\n"
+
+	firstrowA = np.array( ellipse[0][1:] )
+	trans = firstrowA.T
+	if debug == True: print "firstrowA and trans == ", firstrowA, trans
+	denominator = denominator + 2 * (planeState - highercenter) * np.dot( trans, firstcenter )
+	if debug == True: print "denominator == ", denominator, "\n"
+	tempellise = []
+	for term in ellipse:
+		print term
+		tempellise.append(term[:])
+	newmatrix = [x[1:] for x in tempellise[1:]  ]
+	if debug == True: print "Original	 newmatrix is == ",newmatrix
+	for col in range( len(newmatrix)):
+		for row in range( len(newmatrix[0]) ):
+			newmatrix[row][col] = newmatrix[row][col] * numerator/denominator
+	print "Num/Denom == ", numerator/denominator
+	center2nd = CPslicevector[(travaxis + 1):]
+	
+	if debug == True: print "Obtained newmatrix is == ",newmatrix
+	if debug == True: print center2nd
+
+	RecursionEllipses = []
+	RecursionOrigins = []
+
+	RecursionEllipses.append (newmatrix)
+	RecursionOrigins.append (center2nd)
+	print ellipselist
+	raw_input()
+	return RecursionEllipses, RecursionOrigins
+
+
+
+
+def RecursionPoints (CriticalX, CriticalYZ, presentslice, nextslice, debug = False):
+	activeCP = []
+	restCP = []
+	if debug == True : print "CriticalX, presentslice, nextslice == ", CriticalX, presentslice, nextslice
+	for tupl, rest in zip(CriticalX, CriticalYZ):
+		if presentslice < tupl[0] < nextslice:
+			activeCP.append( [tupl[0] , "start"])
+			restCP.append( [rest[0] , "start"])
+		elif presentslice < tupl[1] < nextslice:
+			activeCP.append( [tupl[1] , "end"])
+			restCP.append( [rest[1] , "end"])
+	return activeCP, restCP
 
 def EllUnderConsider(considerlist , CriticalYZ, CriticalX, nextslice, travaxis, debug = False):
 	if debug == True: print considerlist , CriticalYZ, CriticalX, nextslice, travaxis
@@ -28,6 +114,11 @@ def EllUnderConsider(considerlist , CriticalYZ, CriticalX, nextslice, travaxis, 
 			considerYZ.append(templist)
 	return considerYZ
 
+############################
+#CPcalculate - Calculates the Critical Points, for all but the primA ellipse
+# The returned list - Criticalpts, is a list of length n-1, where n is the ellipses being considered for this slice
+# Create separate lists for the travaxis and other axes, both of length n-1
+############################
 def CPcalculate(travaxis, originlist, ellipselist, debug = False):
 	#I need to this for each ellipse
 	Criticalpt = []
@@ -73,8 +164,11 @@ def axisrange(Criticalpt, debug = False):
 	if debug == True: print "Travaxis and otheraxis = ", travaxisrange, otheraxisrange
 	return travaxisrange, otheraxisrange
 
+####################
 #Considerlist - holds the list of the ellipses that need to be considered for the intersect function
 #The returned list is of dimension n. If the vaule is 1, the ellipse is to be considered, else not
+#I think, the < and < are fine. For equality, there will be a critical slice at that slice
+####################
 def EllSliceintersect(CriticalX, value):
 	considerlist = []
 	for index, xcrit in enumerate(CriticalX):
