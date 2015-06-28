@@ -13,7 +13,6 @@ def ReduceEllipsoids (considerlist, CriticalYZ, CPslicevector, travaxis, ellipse
 	#For the first ellipse first
 	ellipse = deepcopy(ellipselist[0])
 	origin = originlist[0]
-
 	if debug == True: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
 	
 	center2nd = np.array( CPslicevector[(travaxis + 1):] )
