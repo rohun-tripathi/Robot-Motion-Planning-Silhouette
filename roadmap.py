@@ -173,7 +173,7 @@ def CreateRoad(travaxis, critical, parentvector ,originlist, ellipselist, debug 
 			slicevector[travaxis] = nextslice 			
 
 			#Get the Ellipselist and the originlist for the lower dimensions
-			RecursionEll, RecursionOri = cp.ReduceEllipsoids(considerlist, CriticalYZ, slicevector, travaxis, ellipselist, originlist, True)
+			RecursionEll, RecursionOri = cp.ReduceEllipsoids(considerlist, CriticalYZ, slicevector, travaxis, ellipselist, originlist, False)
 
 			#obtainedvec is the otherside of returnvec
 			obtainedvec = CreateRoad(travaxis+1, restCP, slicevector ,RecursionOri, RecursionEll, debug = False)
