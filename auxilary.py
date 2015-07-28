@@ -147,8 +147,9 @@ def intersect(A,O,X,n, debug = False):
 	solution,valid = solver(component)			#Solves ax^2 + bX + c = 0
 	if debug == True: print "Solution and valid after function solver", solution,valid
 	if debug == True: print "Substracting with the center, value of O[n-1], which is == ", O[n-1]
+	if debug == True: print "Where n is == ", n
 	for x in range(0,len(solution)):
-		solution[x] += O[n-1]					#This is important. this is because we solved for (Xn - On), not just for Xn.
+		solution[x] += O[n]					#This is important. this is because we solved for (Xn - On), not just for Xn.
 
 	if debug == True: print "The returned values, solution and valid == ", solution, valid
 	if debug == True: gap = raw_input("Done with Intersect, Press Enter...")

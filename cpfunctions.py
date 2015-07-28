@@ -5,17 +5,11 @@ import sys, time, random
 import shared as SH
 import auxilary as aux
 import graph as graph
-import plot as myplt
 import complement as cmpl #Actually use this
 from copy import copy, deepcopy
 
-def ReduceEllipsoids (considerlist, CriticalYZ, CPslicevector, travaxis, ellipselist, originlist, debug = False):
-	#For the first ellipse first
-	ellipse = deepcopy(ellipselist[0])
-	origin = originlist[0]
-	if debug == True: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
-	
-	center2nd = np.array( CPslicevector[(travaxis + 1):] )
+def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, debug = False):
+	center2nd = np.array( arrayYZ )
 	trans = center2nd.T
 	numerator = 1 - np.dot(trans, center2nd)
 
@@ -33,7 +27,7 @@ def ReduceEllipsoids (considerlist, CriticalYZ, CPslicevector, travaxis, ellipse
 	firstcenter = np.array( origin[1:] )
 	trans = firstcenter.T
 	oldmatrix = np.array( [x[1:] for x in ellipse[1:]  ])
-	if debug == True: print "Firstcenter, it's trans, oldmatrix == ", firstcenter, oldmatrix, trans
+	if debug == True: print "Firstcenter, it's trans, oldmatrix == ", firstcenter, trans, oldmatrix
 	
 	value = np.dot( np.dot( trans, oldmatrix ), firstcenter )
 	denominator = denominator - value
@@ -47,27 +41,54 @@ def ReduceEllipsoids (considerlist, CriticalYZ, CPslicevector, travaxis, ellipse
 	
 	if debug == True: print "denominator == ", denominator, "\n"
 	
-	tempellise = []
-	for term in ellipse:
-		tempellise.append(term[:])
+	tempellise = deepcopy(ellipse)
 
 	newmatrix = [x[1:] for x in tempellise[1:]  ]
 	if debug == True: print "Original	 newmatrix is == ",newmatrix
 	for col in range( len(newmatrix)):
 		for row in range( len(newmatrix[0]) ):
 			newmatrix[row][col] = newmatrix[row][col] * numerator/denominator
-	center2nd = CPslicevector[(travaxis + 1):]
+	center2nd = arrayYZ
 	
 	if debug == True: print "Obtained newmatrix is == ",newmatrix
-	if debug == True: print center2nd
+	if debug == True: print center2nd	
 
+	return newmatrix, center2nd
+
+def ReduceEllipsoids (considerlist, considerYZ, CPslicevector, travaxis, ellipselist, originlist, debug = False):
+	
+	if debug == True : print "considerlist == ", considerlist
+	if debug == True : print "considerYZ == ", considerYZ
 	RecursionEllipses = []
 	RecursionOrigins = []
 
-	RecursionEllipses.append (newmatrix)
-	RecursionOrigins.append (center2nd)
-	return RecursionEllipses, RecursionOrigins
+	# The first (outer) Ellipse
+	arrayYZ = CPslicevector[(travaxis + 1):]
+	ellipse = deepcopy(ellipselist[0])
+	origin = originlist[0]
+	
+	if debug == True: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
+	
+	newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin)
+	RecursionEllipses.append (newmatrix[:])
+	RecursionOrigins.append (center2nd[:])
+	
+	print considerlist
 
+	for index, term in enumerate(considerlist):
+		if term == 1:
+			arrayYZ = considerYZ[index]
+
+			ellipse = ellipselist[index + 1]	#Accounting for the outer ellipse
+			origin = originlist[index + 1]
+			
+			newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, True)			
+	
+			RecursionEllipses.append (newmatrix[:])
+			RecursionOrigins.append (center2nd[:])
+	print "RecursionEllipses, RecursionOrigins == " ,RecursionEllipses, RecursionOrigins
+	#raw_input("Press Enter to continue.... ")
+	return RecursionEllipses, RecursionOrigins
 
 def RecurCheck (critical, presentslice, nextslice, debug = False):
 	CritAtThisSlice = []

@@ -1,0 +1,79 @@
+Short Version:
+
+If some can solve the easier to read form as follows, I would be thankful.
+
+\begin{equation}
+ B = \frac{1 - d^{T}Bd}{ K_{1} } A
+\end{equation}
+
+\begin{equation}
+ B^{T}d = \frac{1 - d^{T}Bd}{K_{1}} ( A^{T}c - K_{2}a )
+\end{equation}
+
+Where, B and A are $nxn$ matrices, d, c and a are $nx1$ matrices and  $K_{1}$ and $K_{2}$ are constants.
+
+Everything except B is known, and B is to be calculated.
+
+
+Long Version:
+
+
+I have an ellipsoid in n dimension and I am working out an equation to calculate the ellipsoid at n-1 dimension when a plane with a normal along the x1 axis cuts it.
+
+Intersection of the following two equations:
+
+\begin{equation}
+    (p-c)^{T} * A * ( p-c ) = 1
+\end{equation}
+\begin{equation}
+    p_{1} = a
+\end{equation}
+
+
+Where p is a point in the configuration space of $n$ dimensions. $c$ is the center of the ellipsoid of which $A$ is the semi-definite matrix.
+
+Opening the equation (1) in the present known coordinate from equation (2).
+
+\begin{equation}
+    \label{simple_equation}
+    \begin{bmatrix}{}
+    a-c_{1}, q-\hat{c} \\
+    \end{bmatrix}^{T}  * 
+    \begin{bmatrix}{}
+    a_{11}, \hat{a_{1}}^{T} \\
+    \hat{a_{1}}^{T}, \hat{A}
+    \end{bmatrix} * 
+    \begin{bmatrix}{}
+    a-c_{1} \\
+    q-\hat{c}
+    \end{bmatrix}  = 1
+\end{equation}
+
+Where q is a point in the configuration space of $n-1$ dimensions. $c_{1}$ is the center of the ellipsoid along the $x_{1}$ axis. $\hat{c}$ is the list of center points of the ellipsoid excluding the center at the $x_{1}$ axis.
+$a_{11}$ is the corner most point of A, $\hat{a_{1}}$ is the list of points along the first row of A, excluding the first point.
+
+After manipulation, I brought equation (3) to the following.
+
+\begin{equation}
+ q^{T}\hat{A}q - 2\hat{c}^{T}\hat{A}q + 2(a-c_{1})\hat{a_{1}}^{T}q = 1 - a_{11}(a-c_{1})^{2} - \hat{c}^{T}\hat{A}\hat{c} + 2(a-c_{1})\hat{a}_{1}^{T}\hat{c}
+\end{equation}
+
+
+Now, we wanted an the resulting ellipsoid formed by the Intersection, for which the equation was:
+\begin{equation}
+ (q-d)^{T} * B * ( q-d ) = 1
+\end{equation}
+\begin{equation}
+ q^{T}Bq - 2d^{T}Bq = 1 - d^{T}Bd
+\end{equation}
+
+Now, the equations (4) and (6) are for the same ellipsoid, so:
+\begin{equation}
+ B = \frac{1 - d^{T}Bd}{1 - a_{11}(a-c_{1})^{2} - \hat{c}^{T}\hat{A}\hat{c} + 2(a-c_{1})\hat{a}_{1}^{T}\hat{c}} \hat{A}
+\end{equation}
+
+\begin{equation}
+ B^{T}d = \frac{1 - d^{T}Bd}{1 - a_{11}(a-c_{1})^{2} - \hat{c}^{T}\hat{A}\hat{c} + 2(a-c_{1})\hat{a}_{1}^{T}\hat{c}} ( \hat{A}^{T}\hat{c} - (a-c_{1})\hat{a}_{1} )
+\end{equation}
+
+Everything except B is known, and B is to be calculated.

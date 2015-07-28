@@ -10,13 +10,14 @@ import complement as cmpl #Actually use this
 import cpfunctions as cp
 import rdfunctions as rd
 
+from copy import copy, deepcopy
+
 
 #The main method
 def CreateRoad(travaxis, critical, parentvector ,originlist, ellipselist, debug = False):
 	#Start of initialize	
-	
 	errorout = open("debuginfo.txt", "w")
-
+	print originlist, ellipselist
 	statelist, firstlink, slicevector, startpt = rd.initialize(travaxis, parentvector, originlist, ellipselist, False)
 	returnvec, pastvector, presentvector = rd.initRecursion()
 
@@ -151,12 +152,20 @@ def CreateRoad(travaxis, critical, parentvector ,originlist, ellipselist, debug 
 		if (SH.dim - travaxis) == 2: 						#Reached the 2D case - Base Case
 			CPvector = slicevector[:]						#CPvector will be manipulated to represent the critical val
 			
-			point = CritAtThisSlice[0][0]					#System Limitation, only account for one critical point
+			# print "CritAtThisSlice at slicevector == ", CritAtThisSlice, slicevector, activeCP
+			try:
+				point = CritAtThisSlice[0][0]					#System Limitation, only account for one critical point
+			except IndexError:
+				point = [activeCP[0][0]] + restCP[0][0]
 			for index, term in enumerate(point):
 				CPvector[travaxis + index] = term			#CPvector will be added to the Graph after this
 			VectorNum = rd.AddToVertices(CPvector)
-			if CritAtThisSlice[0][1] == "start": returnvec[1].append(VectorNum)
-			elif CritAtThisSlice[0][1] == "end": returnvec[2].append(VectorNum)
+			try:
+				startendflag = CritAtThisSlice[0][1]
+			except IndexError:
+				startendflag = restCP[0][1]
+			if startendflag == "start": returnvec[1].append(VectorNum)
+			elif startendflag == "end": returnvec[2].append(VectorNum)
 			else:
 				print "There is an error in the travaxis == ", travaxis, "The Criticalpt here does not have appended text (start/end)" 
 				sys.exit(0)
@@ -173,7 +182,7 @@ def CreateRoad(travaxis, critical, parentvector ,originlist, ellipselist, debug 
 			slicevector[travaxis] = nextslice 			
 
 			#Get the Ellipselist and the originlist for the lower dimensions
-			RecursionEll, RecursionOri = cp.ReduceEllipsoids(considerlist, CriticalYZ, slicevector, travaxis, ellipselist, originlist, False)
+			RecursionEll, RecursionOri = cp.ReduceEllipsoids(considerlist, considerYZ, slicevector, travaxis, deepcopy(ellipselist), deepcopy(originlist), False)
 
 			#obtainedvec is the otherside of returnvec
 			obtainedvec = CreateRoad(travaxis+1, restCP, slicevector ,RecursionOri, RecursionEll, debug = False)

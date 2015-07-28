@@ -6,7 +6,7 @@ def init():
 	valcount = -1; 		# valcount keeps the number of the value of the point being added to the adjacency tree
 	primA = []			#primA stores the terms for the primary axis. The one to traverse along on the first iteration
 
-	iterate = 100 	#Something like space parts to complete traversal
+	iterate = 100 	#Number of slices to cover the ellipsoid in nD space
 
 	num = 0;
 	dim = 0;
