@@ -45,9 +45,12 @@ def complete_link(P, V, debug = False):			#past and now vector
 	if debug == True: 
 		print "In Complete Link, Pastvector and Present-vector== ", P, V
 		print "Sleeping"
-		time.sleep(2)
+		time.sleep(3)
+	if len(V) > 1:
+		print "In Complete Link, Pastvector and Present-vector== ", P, V
+		print "The length of Pastvector is greator than 1. \n Should this have happened? Check it.\nExiting"
+		sys.exit(0)
 
-	
 	for i in range(0,len(V)):		
 		inf = 0; val = 23456789	#high value
 		for j in range(0,len(P)):
@@ -176,25 +179,24 @@ def solver(component):
 
 
 
-
-def link_special(P, V, adjval, adj):			#past and now vector
+# def link_special(P, V, adjval, adj):			#past and now vector
 	
-	#print "p and V== ", P, V
-	for i in range(0,len(V)):		
-		inf = 0; val = 23456789	#high value
-		for j in range(0,len(P)):
-			one = np.array( adjval[V[i]])
-			two = np.array( adjval[P[j]] )
-			three = linalg.norm( one - two )
-		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
-		 	#print "adjval == ", adjval
-		 	if val >= three :
-		 		val = three
-		 		inf = P[j]
-		#print "inf== ", inf
-		adj.append([inf,V[i][:], val, "link_special"])	#ULTA append!
+# 	#print "p and V== ", P, V
+# 	for i in range(0,len(V)):		
+# 		inf = 0; val = 23456789	#high value
+# 		for j in range(0,len(P)):
+# 			one = np.array( adjval[V[i]])
+# 			two = np.array( adjval[P[j]] )
+# 			three = linalg.norm( one - two )
+# 		 	#print "1, P[j] , 2 ,3, val == ",one ,P[j], two,  three, val, "\n"
+# 		 	#print "adjval == ", adjval
+# 		 	if val >= three :
+# 		 		val = three
+# 		 		inf = P[j]
+# 		#print "inf== ", inf
+# 		adj.append([inf,V[i][:], val, "link_special"])	#ULTA append!
 		
-	return adj
+# 	return adj
 
 # def complete_link(P, V, CV, valcount, adjval, adj):			#past and now vector
 # 	point = []

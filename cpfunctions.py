@@ -8,14 +8,9 @@ import graph as graph
 import complement as cmpl #Actually use this
 from copy import copy, deepcopy
 
+import pprint as pprint
 def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, debug = False):
-	center2nd = np.array( arrayYZ )
-	trans = center2nd.T
-	numerator = 1 - np.dot(trans, center2nd)
-
-	if debug == True: print "d and d.T == ", center2nd, trans
-	if debug == True: print "numerator == ", numerator, "\n"
-
+	
 	topcorner = ellipse[0][0]
 	planeState = CPslicevector[travaxis]
 	highercenter = origin[0]
@@ -41,17 +36,73 @@ def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, deb
 	
 	if debug == True: print "denominator == ", denominator, "\n"
 	
-	tempellise = deepcopy(ellipse)
+	center2nd = np.array( arrayYZ )
+	trans = center2nd.T
+	# numerator = 1 - np.dot(trans, center2nd) #This is the mistake
 
-	newmatrix = [x[1:] for x in tempellise[1:]  ]
-	if debug == True: print "Original	 newmatrix is == ",newmatrix
-	for col in range( len(newmatrix)):
-		for row in range( len(newmatrix[0]) ):
-			newmatrix[row][col] = newmatrix[row][col] * numerator/denominator
-	center2nd = arrayYZ
+	arrayofD = []
+
+	reduceEllipseDim = len(ellipse[0]) - 1 					#n-1
+
+	if len(center2nd) != reduceEllipseDim:
+		print "Error! len(center2nd) != reduceEllipseDim\nExiting"
+		sys.exit()
+
+	for irow in range(reduceEllipseDim):
+		for icol in range(reduceEllipseDim):
+			arrayofD.append( center2nd[ irow ] * center2nd[ icol ])
+
+	if debug == True: print "arrayofD == ", arrayofD
+
+	#begins the preparation for equation. AX = Y
+	#X in the equations is the terms of the "B" metrix (for the ellipse in the lower dim)  len -> (n-1) * (n-1)
+	#A is the coefficients of the terms in the "B" matrix 
+	#Y is the constant term of each equation
+
+	A = []; Y = []
 	
-	if debug == True: print "Obtained newmatrix is == ",newmatrix
-	if debug == True: print center2nd	
+	for irow in range(reduceEllipseDim):
+		for icol in range(reduceEllipseDim):
+			apq = ellipse[ 1+irow ][ 1+icol ]
+			Y.append( apq )				#Accounting for the lowering in dimensions
+			mult = np.multiply( apq, arrayofD )
+			mult [ (irow)*reduceEllipseDim + icol ] += denominator
+			A.append( mult.tolist() )
+
+	if debug == True :
+		print "A == "
+		pprint.pprint(A)
+
+	if debug == True:
+		print "here"
+
+	X = np.linalg.solve(A,Y)
+
+	if debug == True :
+		print "X == "
+		pprint.pprint(X)
+		
+
+	#produce the newmatrix
+
+	newmatrix = []
+	for irow in range(reduceEllipseDim):
+		temp = []
+		for icol in range(reduceEllipseDim):
+			temp.append( X[irow * reduceEllipseDim + icol] )
+		newmatrix.append(temp)	
+
+	# tempellise = deepcopy(ellipse)
+
+	# newmatrix = [x[1:] for x in tempellise[1:]  ]
+	# if debug == True: print "Original	 newmatrix is == ",newmatrix
+	# for col in range( len(newmatrix)):
+	# 	for row in range( len(newmatrix[0]) ):
+	# 		newmatrix[row][col] = newmatrix[row][col] * numerator/denominator
+	# center2nd = arrayYZ
+	
+	# if debug == True: print "Obtained newmatrix is == ",newmatrix
+	# if debug == True: print center2nd	
 
 	return newmatrix, center2nd
 
@@ -69,7 +120,7 @@ def ReduceEllipsoids (considerlist, considerYZ, CPslicevector, travaxis, ellipse
 	
 	if debug == True: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
 	
-	newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin)
+	newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, True)
 	RecursionEllipses.append (newmatrix[:])
 	RecursionOrigins.append (center2nd[:])
 	
@@ -193,3 +244,51 @@ def EllSliceintersect(CriticalX, value):
 		else:
 			considerlist.append(0)
 	return considerlist
+
+
+# def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, debug = False):
+# 	center2nd = np.array( arrayYZ )
+# 	trans = center2nd.T
+# 	numerator = 1 - np.dot(trans, center2nd)
+
+# 	if debug == True: print "d and d.T == ", center2nd, trans
+# 	if debug == True: print "numerator == ", numerator, "\n"
+
+# 	topcorner = ellipse[0][0]
+# 	planeState = CPslicevector[travaxis]
+# 	highercenter = origin[0]
+# 	denominator = 1 - topcorner * (planeState - highercenter)  * (planeState - highercenter)	# denom = 1 - aii (a - ci ) ^ 2
+	
+# 	if debug == True: print "topcorner, planeState, highercenter == ", topcorner, planeState, highercenter
+# 	if debug == True: print "denominator == ", denominator, "\n"
+
+# 	firstcenter = np.array( origin[1:] )
+# 	trans = firstcenter.T
+# 	oldmatrix = np.array( [x[1:] for x in ellipse[1:]  ])
+# 	if debug == True: print "Firstcenter, it's trans, oldmatrix == ", firstcenter, trans, oldmatrix
+	
+# 	value = np.dot( np.dot( trans, oldmatrix ), firstcenter )
+# 	denominator = denominator - value
+	
+# 	if debug == True: print value
+# 	if debug == True: print "denominator == ", denominator, "\n"
+
+# 	firstrowA = np.array( ellipse[0][1:] )
+# 	trans = firstrowA.T
+# 	denominator = denominator + 2 * (planeState - highercenter) * np.dot( trans, firstcenter )
+	
+# 	if debug == True: print "denominator == ", denominator, "\n"
+	
+# 	tempellise = deepcopy(ellipse)
+
+# 	newmatrix = [x[1:] for x in tempellise[1:]  ]
+# 	if debug == True: print "Original	 newmatrix is == ",newmatrix
+# 	for col in range( len(newmatrix)):
+# 		for row in range( len(newmatrix[0]) ):
+# 			newmatrix[row][col] = newmatrix[row][col] * numerator/denominator
+# 	center2nd = arrayYZ
+	
+# 	if debug == True: print "Obtained newmatrix is == ",newmatrix
+# 	if debug == True: print center2nd	
+
+# 	return newmatrix, center2nd

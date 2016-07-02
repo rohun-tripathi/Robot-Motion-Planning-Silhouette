@@ -5,9 +5,9 @@ import sys, time
 import shared as SH
 import auxilary as aux
 
-def processinput(originlist, ellipselist, debug=False):
+def processinput(originlist, ellipselist, inputfile, debug=False):
 	if debug == True: print "In ProcessInput, Check"
-	inp = open("input3D.txt","r").readlines()
+	inp = open(inputfile,"r").readlines()
 	for index, l in enumerate(inp):
 		parts = l.strip().split()
 		if index == 0:

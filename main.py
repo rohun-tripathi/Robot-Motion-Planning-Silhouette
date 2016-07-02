@@ -3,6 +3,7 @@
 import numpy as np
 import numpy.linalg as linalg
 import sys, time, random
+from optparse import OptionParser
 
 import shared as SH
 import auxilary as aux
@@ -15,7 +16,9 @@ import roadmap as roadmap
 debug = False
 SH.init()				#initialize the global variables
 
-originlist, ellipselist = complement.processinput([], [])			#processinput(originlist, ellipselist):
+(options, args) = OptionParser().parse_args()
+
+originlist, ellipselist = complement.processinput([], [], args [0])			#processinput(originlist, ellipselist):
 
 if debug == True:
 	print "originlist = ",  originlist
