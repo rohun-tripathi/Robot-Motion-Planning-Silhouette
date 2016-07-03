@@ -12,8 +12,8 @@ def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, deb
     topcorner = ellipse[0][0]
     planeState = CPslicevector[travaxis]
     highercenter = origin[0]
-    denominator = 1 - topcorner * (planeState - highercenter) * (
-    planeState - highercenter)  # denom = 1 - aii (a - ci ) ^ 2
+    # denom = 1 - aii (a - ci ) ^ 2
+    denominator = 1 - topcorner * (planeState - highercenter) * (planeState - highercenter)
 
     if debug: print "topcorner, planeState, highercenter == ", topcorner, planeState, highercenter
     if debug: print "denominator == ", denominator, "\n"
@@ -105,6 +105,7 @@ def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, deb
 
     return newmatrix, center2nd
 
+
 def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipselist, originlist, debug=False):
     if debug: print "considerlist == ", considerlist
     if debug: print "considerYZ == ", considerYZ
@@ -163,8 +164,8 @@ def RecursionPoints(CriticalX, CriticalYZ, presentslice, nextslice, debug=False)
             restCP.append([rest[1], "end"])
     return activeCP, restCP
 
+
 def ellipseUnderConsider(considerlist, CriticalYZ, CriticalX, nextslice, travaxis, debug=False):
-    if debug: print considerlist, CriticalYZ, CriticalX, nextslice, travaxis
     considerYZ = []
     for index, listitem in enumerate(considerlist):
         if listitem == 0:
@@ -172,16 +173,17 @@ def ellipseUnderConsider(considerlist, CriticalYZ, CriticalX, nextslice, travaxi
             continue
         else:
             templist = [0 for x in range(travaxis + 1, SH.dim)]
-            Xvalues = (nextslice - CriticalX[index][0]) / (
-            CriticalX[index][1] - CriticalX[index][0])  # Xvalues = (x - x0) / (x1 - x0)
+            # Xvalues = (x - x0) / (x1 - x0)
+            Xvalues = (nextslice - CriticalX[index][0]) / (CriticalX[index][1] - CriticalX[index][0])
 
             for dimen in range(SH.dim - (travaxis + 1)):
-                if debug: print CriticalYZ[index], CriticalYZ[index][1]
                 templist[dimen] = CriticalYZ[index][1][dimen] - CriticalYZ[index][0][dimen]  # Val = (y1 - y0)
                 templist[dimen] *= Xvalues  # Val = (x - x0) * (y1 - y0) / (x1 - x0)
                 templist[dimen] += CriticalYZ[index][0][dimen]  # Val = (x - x0) * (y1 - y0) / (x1 - x0) + y0
+
             considerYZ.append(templist)
     return considerYZ
+
 
 ############################
 # CPcalculate - Calculates the Critical Points, for all but the primA ellipse
@@ -216,7 +218,7 @@ def cpCalculate(traversalAxis, originlist, ellipselist, debug=False):
         cpEllipse = []
 
         # The two cricat values come using the +/- for the sqrt value
-        for PosnegValue in posneg: #todo chnage
+        for PosnegValue in posneg:  # todo chnage
             cpVector = PosnegValue * 1 / criticalVal * ellipseInvRow + np.array(origin)
             # The main equation ^ of this part of the code. Equation of "Criticality" -- > todo mention
             if debug: print "cpVector == ", cpVector

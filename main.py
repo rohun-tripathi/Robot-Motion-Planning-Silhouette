@@ -18,7 +18,7 @@ def printInitialValues():
 
 
 # This code assumes that the input format is correct
-inputFile = "input3D.txt"
+inputFile = "input3D_2.txt"
 
 # initialize the global variables
 SH.init()
