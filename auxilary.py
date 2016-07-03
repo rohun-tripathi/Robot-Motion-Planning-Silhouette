@@ -7,7 +7,7 @@ import shared as SH
 import auxilary as aux
 import graph as graph
 import plot as myplt
-import complement as cmpl #Actually use this
+import processAndValidateInput as cmpl #Actually use this
 import cpfunctions
 import rdfunctions
 
@@ -28,11 +28,11 @@ def endRecur_link (P, V, debug = False):			#P - past and V - Presentvector
 		 		val = three
 		 		inf = P[j]
 		if debug == True: print "For the ", i, "th presentvector, the inf== ", inf
-		rdfunctions.AddToRoadmap( V[i], inf, val, "link")	#the weight is val
+		rdfunctions.addToRoadmap(V[i], inf, val, "link")	#the weight is val
 		linked.append(inf)
 	diffList = [x for x in P if x not in linked]
 	if debug == True: print "diffList, linked, pastvector == ", diffList , linked, P
-	link(V, diffList, [], debug)
+	linkPresentAndPastVector(V, diffList, [], debug)
 
 
 #####################
@@ -59,7 +59,7 @@ def complete_link(P, V, debug = False):			#past and now vector
 			three = linalg.norm( one - two )
 		 	
 			if debug == True: print "In complete link, For the ", i, "the presentvector, the inf== ", inf
-			rdfunctions.AddToRoadmap( V[i], P[j], val, "complete_link")	#the weight is val
+			rdfunctions.addToRoadmap(V[i], P[j], val, "complete_link")	#the weight is val
 	return V
 
 
@@ -69,7 +69,7 @@ def complete_link(P, V, debug = False):			#past and now vector
 # creates adjacency list adj. adjval stores the point in N dimension for each point index
 # returns the index of vectors in V corresponding to numbers in adjval 
 # The functionality pf link has been understood and the others are just variations as per needs
-def link(P, V, CV, debug = False):			#past and now vector
+def linkPresentAndPastVector(P, V, CV, debug = False):			#past and now vector
 	if debug == True: print "Pastvector and Present-vector and CV== ", P, V, CV
 
 	for i in range(0,len(V)):		
@@ -83,7 +83,7 @@ def link(P, V, CV, debug = False):			#past and now vector
 		 		val = three
 		 		inf = P[j]
 		if debug == True: print "For the ", i, "th presentvector, the inf== ", inf
-		rdfunctions.AddToRoadmap( V[i], inf, val, "link")	#the weight is val
+		rdfunctions.addToRoadmap(V[i], inf, val, "link")	#the weight is val
 		
 	for i in range(0,len(CV)):		
 		inf = 0; val = 23456789	#high value
@@ -96,7 +96,7 @@ def link(P, V, CV, debug = False):			#past and now vector
 		 		val = three
 		 		inf = P[j]
 		if debug == True: print "For the ", i, "th CV, the inf== ", inf
-		rdfunctions.AddToRoadmap( CV[i], inf, val, "link")	#the weight is val
+		rdfunctions.addToRoadmap(CV[i], inf, val, "link")	#the weight is val
 	V.extend(CV)
 	return V
 
@@ -107,7 +107,7 @@ def link(P, V, CV, debug = False):			#past and now vector
 # O is the array with the origin
 # n is one of the axes after the travaxis
 
-def intersect(A,O,X,n, debug = False):
+def getIntersectionPointAlongtravAxis(A, O, X, n, debug = False):
 
 	#This is important
 	#n = 0

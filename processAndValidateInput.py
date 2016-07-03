@@ -1,13 +1,11 @@
+import sys
 import numpy as np
-import numpy.linalg as linalg
-import sys, time
-
 import shared as SH
-import auxilary as aux
 
-def processinput(originlist, ellipselist, inputfile, debug=False):
+def processInput(originlist, ellipselist, inputfile, debug=False):
+
 	if debug == True: print "In ProcessInput, Check"
-	inp = open(inputfile,"r").readlines()
+	inp = open(inputfile,"r").readlines()	#Write the code to validate the input files
 	for index, l in enumerate(inp):
 		parts = l.strip().split()
 		if index == 0:
@@ -54,7 +52,9 @@ def processinput(originlist, ellipselist, inputfile, debug=False):
 
 
 
-
+#This function was for some task that I don't remember
+# Later check also that it is not inside any of the other ellipsoids
+#Remove on the 9th of July
 def f(dim,num,X,ellips,ellarr):
 	return 1
 	for i in range(0,num):

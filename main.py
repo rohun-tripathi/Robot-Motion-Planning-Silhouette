@@ -1,35 +1,36 @@
+# !usr/bin/env python
 
-#!usr/bin/env python
-import numpy as np
-import numpy.linalg as linalg
-import sys, time, random
-from optparse import OptionParser
-
-import shared as SH
-import auxilary as aux
-import graph as graph
+import processAndValidateInput  # Actually use this
 import plot as myplt
-import complement #Actually use this
 import roadmap as roadmap
+import shared as SH
 
-###This code assumes that the input format is correct
+
+def printInitialValues():
+    if debug:
+        print "originlist = ", originList
+        print "ellipselist = ", ellipseList
+        print "num = ", SH.num
+        print "dim = ", SH.dim
+        print "adjmatrix = ", SH.adjmatrix
+        print "primA = ", SH.primA
+        print "adjcoordinates = ", SH.adjcoordinates
+
+
+# This code assumes that the input format is correct
+inputFile = "input3D.txt"
+
+# initialize the global variables
+SH.init()
 debug = False
-SH.init()				#initialize the global variables
 
-(options, args) = OptionParser().parse_args()
+# processinput(originlist, ellipselist)
+originList, ellipseList = processAndValidateInput.processInput([], [], inputFile)
+printInitialValues()
 
-originlist, ellipselist = complement.processinput([], [], args [0])			#processinput(originlist, ellipselist):
+# Start the process CreateRoad(traversalAxis, CriticalPoints, parentvector ,originlist, ellipselist )
 
-if debug == True:
-	print "originlist = ",  originlist
-	print "ellipselist = ",  ellipselist
-	print "num = ",  SH.num
-	print "dim = ",  SH.dim
-	print "adjmatrix = ",  SH.adjmatrix
-	print "primA = ", SH.primA
-roadmap.CreateRoad(0, [], [0 for x in range(SH.dim)] ,originlist, ellipselist, False)		#CreateRoad(traversalAxis, CriticalPoints, parentvector ,originlist, ellipselist )	
-
-
+roadmap.createRoad(0, [], [0 for x in range(SH.dim)], originList, ellipseList, False)
 
 # tree = main(valcount, adj)
 # fig = plt.figure(i)
@@ -39,8 +40,8 @@ roadmap.CreateRoad(0, [], [0 for x in range(SH.dim)] ,originlist, ellipselist, F
 # plt.show()
 # plt.close(fig)
 # del fig
-#plotthis3()
+# plotthis3()
 
 
-#START WITH THIS COMMENT
-myplt.plotthis(SH.num,originlist,ellipselist,SH.adjmatrix,SH.adjcoordinates)
+# START WITH THIS COMMENT
+myplt.plotthis(SH.num, originList, ellipseList, SH.adjmatrix, SH.adjcoordinates)

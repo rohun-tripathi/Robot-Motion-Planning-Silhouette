@@ -1,202 +1,263 @@
-import numpy as np
-import numpy.linalg as linalg
-import sys, time, random
+import sys
+from copy import deepcopy
 
-import shared as SH
-import auxilary as aux
-import graph as graph
-import plot as myplt
-import complement as cmpl #Actually use this
-import cpfunctions as cp
+import auxilary
+import cpfunctions as CriticalPointFunctions
 import rdfunctions as rd
+import shared as SHARED
 
-from copy import copy, deepcopy
-
-
-#The main method
-def CreateRoad(travaxis, critical, parentvector ,originlist, ellipselist, debug = False):
-	#Start of initialize	
-	errorout = open("debuginfo.txt", "w")
-	print originlist, ellipselist
-	statelist, firstlink, slicevector, startpt = rd.initialize(travaxis, parentvector, originlist, ellipselist, False)
-	returnvec, pastvector, presentvector = rd.initRecursion()
-
-	if debug == True:
-		print "Originlist = ",  originlist
-		print "ellipselist = ",  ellipselist
-		print "num = ",  SH.num
-		print "dim = ",  SH.dim
-		print "slicevector = ",  slicevector
-		print "adjcoordinates = ",  SH.adjcoordinates
-
-	#CPcalculate - Calculates the Critical Points, for all but the primA ellipse
-	#The returned list - Criticalpts, is a list of length n-1, where n is the ellipses being considered for this slice
-	#Create separate lists for the travaxis and other axes, both of length n-1
-	Criticalpts = cp.CPcalculate(travaxis, originlist, ellipselist, False)
-	CriticalX, 	CriticalYZ = cp.axisrange(Criticalpts, False	)
-
-	#Begin the iteration
-	for iteration in range(SH.iterate):
-		presentvector = []
-		nextslice = rd.getNextSlice(startpt, iteration)		#nextslice is a value
-		
-		if iteration == 0 or iteration == SH.iterate -1 :
-			## ## All this goes to a different function
-
-			if debug == True: print "in Slice "+ str(iteration) + " slicevector == ", slicevector
-			slicevector[travaxis] = nextslice 			#No need for the old information
-			if debug == True: print "in Slice 0, slicevector == ", slicevector
-			returnvec, presentvector = rd.LastorFirstSlice(returnvec, presentvector, slicevector)
-			if iteration == SH.iterate -1 :
-				pastvector = aux.complete_link(pastvector, presentvector, False)
-			else:
-				pastvector = presentvector[:]
-
-			continue
-
-		
-		#Considerlist - holds the list of the ellipses that need to be considered for the intersect function
-		#The returned list is of dimension n-1. If the vaule is 1, the ellipse is to be considered, else not
-		considerlist = cp.EllSliceintersect(CriticalX, nextslice)
-
-		#The returned list is of dimension n-1.
-		considerYZ = cp.EllUnderConsider(considerlist , CriticalYZ, CriticalX,  nextslice, travaxis, False)
-
-		slicevector[travaxis] = nextslice 			#No need for the old slice information?
-				#Technically if there were any CPs they should have been dealt with by this stage
-#############################################
-		#The Intersect and creation of presentvector
-#############################################
-
-		#first for the first ellipse
-		for axis2 in range(1,2):# (travaxis+1, SH.dim):
-			solution, valid = aux.intersect(ellipselist[0], originlist[0], slicevector[(travaxis):], axis2)
-			#print >> errorout, "Sent == ", ellipselist[0], originlist[0], slicevector[(travaxis):], axis2
-			vector = slicevector[:]
-
-			if valid ==1 :		#Later check also that it is not inside any of the other ellipsoids
-				if solution[0] == solution[1] and firstlink!= 1:
-					print "Error, this is not supposed to happen, both the solutions are equal. But letting it be for Now. iteration == ", iteration
-					print solution, slicevector
-					#sys.exit(0)
-				for sol in solution:
-					print >> errorout, "For axis == ", axis2, " for vector == ",vector, " found solution == ", sol
-			
-					vector[travaxis + 1] = sol
-					
-					VectorNum = rd.AddToVertices(vector[:])
-					presentvector.append( VectorNum )
-					#returnvec[0].append( VectorNum )
-				#Some processing needs to be done
-			
-
-		for index, listitem in enumerate(considerlist):
-			if listitem == 0 :
-				continue
-			#else: Now the rest of the code for this loop
-
-			# We have to find the correct ellipse and remember to account for the first ellipse being primA 			
-			if debug == True :print "Working for obstacle, index no. ", index
-			ellipse = ellipselist[index + 1]
-			origin = originlist[index + 1]
-
-			# also we have to extract the correct vector using the slice vector and the list in consider YZ
-			vector = slicevector[:]
-
-			#The rest of slice vector and the vector from considerYZ shud have same len, check this
-			if not len(considerYZ[index]) == SH.dim - (travaxis + 1):
-				print "Check2, Error! This is not supposed to happen, both the matrix should have equal dimensions."
-				sys.exit(0)
-			
-			for i in range(SH.dim - (travaxis + 1) ):
-				vector[	(travaxis + 1) + i] = considerYZ[index][i]
-			if debug == True :print "For the slicevector ", slicevector, "gotten the following vector to run intersect along, ", vector
-			
-			#Run Intersect
-			for axis2 in range(1,2):# (travaxis+1, SH.dim):
-				solution, valid = aux.intersect(ellipse, origin, vector[(travaxis):], axis2, False)
-				if valid ==1 :
-					if solution[0] == solution[1]:
-						print "Check2, Error! This is not supposed to happen, both the solutions are equal."
-						sys.exit(0)
-					for sol in solution:
-						vector[travaxis + 1] = sol
-						VectorNum = rd.AddToVertices(vector)
-						presentvector.append( VectorNum )
-						#returnvec[0].append( VectorNum )
-					if debug == True :print "got solution == ", solution
-###########################################
-#Intersect Done
-
-		#Last Step of this iteration
-		pastvector = aux.link(pastvector, presentvector, [], False)
-
-		#Now Begins Work of Critical points
-		nextslice = rd.getNextSlice(startpt, iteration + 1)		#nextslice is a value of next iteration
-		#ActiveCP and restCP have the value for any critcal points found at this stage. The active is along the travaxis and restCP is for recursion
-		activeCP, restCP = cp.RecursionPoints(CriticalX, CriticalYZ, slicevector[travaxis], nextslice, False)
-		#To find which critical points from higher level have to be attached at this stage
-		CritAtThisSlice = cp.RecurCheck (critical, slicevector[travaxis], nextslice, False)
-		
-		if len(activeCP) + len(CritAtThisSlice)> 1:
-			print "System Limitation. We are just working with one critical point between two slices presently. A solution could be to increase the iterate variable, so slices come closer"
-			print "It could be be the critical points from higher dimension and this one are crowding together."
-			sys.exit(0)
-		if len(activeCP) + len(CritAtThisSlice)== 0: continue
-		
-		#We work on the CritAtThisSlice one first
-		# if len(CritAtThisSlice) > 0:						#If count is greater than 0, first recursion worked
-		# 	print activeCP, restCP, CritAtThisSlice, slicevector
-		# 	raw_input("reached here")
-
-		if (SH.dim - travaxis) == 2: 						#Reached the 2D case - Base Case
-			CPvector = slicevector[:]						#CPvector will be manipulated to represent the critical val
-			
-			# print "CritAtThisSlice at slicevector == ", CritAtThisSlice, slicevector, activeCP
-			try:
-				point = CritAtThisSlice[0][0]					#System Limitation, only account for one critical point
-			except IndexError:
-				point = [activeCP[0][0]] + restCP[0][0]
-			for index, term in enumerate(point):
-				CPvector[travaxis + index] = term			#CPvector will be added to the Graph after this
-			VectorNum = rd.AddToVertices(CPvector)
-			try:
-				startendflag = CritAtThisSlice[0][1]
-			except IndexError:
-				startendflag = restCP[0][1]
-			if startendflag == "start": returnvec[1].append(VectorNum)
-			elif startendflag == "end": returnvec[2].append(VectorNum)
-			else:
-				print "There is an error in the travaxis == ", travaxis, "The Criticalpt here does not have appended text (start/end)" 
-				sys.exit(0)
-
-			aux.link(pastvector, [VectorNum], [], False)	#Add this VectorNum to the network
-			pastvector.append(VectorNum)					#Added to pastvectors as will be needed in next slice	
-			continue										#Done for this iteration
+CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST = 1
 
 
-		else:												#Not 2D. We have to prepare to call the lower dimension
-			nextslice = activeCP[0][0]						#The travaxis value for the recursion slice
-			considerlist = cp.EllSliceintersect(CriticalX, nextslice)
-			considerYZ = cp.EllUnderConsider(considerlist , CriticalYZ, CriticalX,  nextslice, travaxis, False)
-			slicevector[travaxis] = nextslice 			
+def createRoad(traversalAxis, criticalPoints, parentVector, originList, ellipseMatrixList, debug=False):
+    if debug: print originList, ellipseMatrixList
 
-			#Get the Ellipselist and the originlist for the lower dimensions
-			RecursionEll, RecursionOri = cp.ReduceEllipsoids(considerlist, considerYZ, slicevector, travaxis, deepcopy(ellipselist), deepcopy(originlist), False)
+    stateList, firstLink, sliceVector = initialize(traversalAxis, parentVector, originList, ellipseMatrixList, debug)
+    returnvec, pastVector, presentVector = initRecursion()
+    errorOut = open("debuginfo.txt", "w")
 
-			#obtainedvec is the otherside of returnvec
-			obtainedvec = CreateRoad(travaxis+1, restCP, slicevector ,RecursionOri, RecursionEll, debug = False)
-			
-			presentvector = obtainedvec[0][:]
-			presentvector.extend(obtainedvec[2][:])		#For Doubts regarding the obtainedvec/returnvec refer to README.md
-			aux.endRecur_link(pastvector, presentvector, False)
+    CriticalPointPairs = CriticalPointFunctions.cpCalculate(traversalAxis, originList, ellipseMatrixList, debug)
+    CriticalAlongTraversal, CriticalAlongOthers = CriticalPointFunctions.axisRange(CriticalPointPairs, debug)
 
-			pastvector = obtainedvec[0][:]
-			pastvector.extend(obtainedvec[1][:])		#Preparing the real pastvector for the next slice. 
+    # Begin the iteration
+    startPoint = sliceVector[traversalAxis] #major todo
+    for iteration in range(SHARED.iterate):
+        presentVector = []
+        nextSlice = getNextSlice(startPoint, iteration)  # nextSlice is a value
+
+        if iteration == 0 or iteration == SHARED.iterate - 1:
+            pastVector, returnvec = processForFirstOrLastSlice(iteration, nextSlice, pastVector, presentVector,
+                                                               returnvec, sliceVector, traversalAxis, debug)
+            continue
+
+        # ellipsesToConsider - holds the list of the ellipses that need to be considered for the intersect function
+        # The returned list is of dimension n-1. If the vaule is 1, the ellipse is to be considered, else not
+        ellipsesToConsider = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSlice)
+
+        # The returned list is of dimension n-1.
+        considerYZ = CriticalPointFunctions.ellipseUnderConsider(ellipsesToConsider, CriticalAlongOthers,
+                                                                 CriticalAlongTraversal,
+                                                                 nextSlice, traversalAxis, debug)
+
+        sliceVector[traversalAxis] = nextSlice  # No need for the old slice information?
+        # Technically if there were any CPs they should have been dealt with by this stage
+        #############################################
+        # The Intersect and creation of presentVector
+        #############################################
+
+        # first for the first ellipse
+        for axis2 in range(1, 2):  # (travaxis+1, SH.dim): todo
+            findInterSectionPointsAlongFirstAxis(axis2, ellipseMatrixList, errorOut, firstLink, iteration, originList,
+                                                 presentVector, sliceVector, traversalAxis)
+
+        for index, ellipseFlag in enumerate(ellipsesToConsider):
+            if ellipseFlag == 0: continue
+
+            # We have to find the correct ellipse and remember to account for the first ellipse being primA
+            if debug: print "Working for obstacle, index no. ", index
+            ellipse = ellipseMatrixList[index + CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST]
+            origin = originList[index + CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST]
 
 
-	for edgeindex, edge in enumerate( SH.adjmatrix) :
-		print >> errorout, edgeindex, "edge == ", edge
-	for coorindex, coor in enumerate( SH.adjcoordinates) :
-		print >> errorout, coorindex, "coor == ", coor	
-	return returnvec
+            if not len(considerYZ[index]) == SHARED.dim - (traversalAxis + 1):
+                raise IndexError("Error! The \"rest of slice vector\" and vector from considerYZ should have same len.",
+                                 considerYZ[index], sliceVector, SHARED.dim - (traversalAxis + 1))
+
+            vector = extractCorrectVectorUsingConsiderYZ(considerYZ, index, sliceVector, traversalAxis, debug)
+
+            for axis2 in range(1, 2):  # (travaxis+1, SH.dim): todo
+                findIntersectionPointsBetweenEllipseAndSlice(axis2, ellipse, origin, presentVector, traversalAxis,
+                                                             vector)
+
+        pastVector = auxilary.linkPresentAndPastVector(pastVector, presentVector, [], debug)
+
+        # Now Begins Work of Critical points
+        nextSlice = getNextSlice(startPoint, iteration + 1)  # nextSlice is a value of next iteration
+        # ActiveCP and restCP have the value for any critcal points found at this stage. The active is along the travaxis and restCP is for recursion
+        activeCP, restCP = CriticalPointFunctions.RecursionPoints(CriticalAlongTraversal, CriticalAlongOthers,
+                                                                  sliceVector[traversalAxis],
+                                                                  nextSlice, False)
+        # To find which critical points from higher level have to be attached at this stage
+        CritAtThisSlice = CriticalPointFunctions.RecurCheck(criticalPoints, sliceVector[traversalAxis], nextSlice,
+                                                            False)
+
+        if len(activeCP) + len(CritAtThisSlice) > 1:
+            print "System Limitation. We are just working with one critical point between two slices presently. A solution could be to increase the iterate variable, so slices come closer"
+            print "It could be be the critical points from higher dimension and this one are crowding together."
+            sys.exit(0)
+        if len(activeCP) + len(CritAtThisSlice) == 0: continue
+
+        # We work on the CritAtThisSlice one first
+        # if len(CritAtThisSlice) > 0:						#If count is greater than 0, first recursion worked
+        # 	print activeCP, restCP, CritAtThisSlice, sliceVector
+        # 	raw_input("reached here")
+
+        if (SHARED.dim - traversalAxis) == 2:  # Reached the 2D case - Base Case
+            CPvector = sliceVector[:]  # CPvector will be manipulated to represent the critical val
+
+            # print "CritAtThisSlice at sliceVector == ", CritAtThisSlice, sliceVector, activeCP
+            try:
+                point = CritAtThisSlice[0][0]  # System Limitation, only account for one critical point
+            except IndexError:
+                point = [activeCP[0][0]] + restCP[0][0]
+            for index, term in enumerate(point):
+                CPvector[traversalAxis + index] = term  # CPvector will be added to the Graph after this
+            VectorNum = rd.addToVertices(CPvector)
+            try:
+                startendflag = CritAtThisSlice[0][1]
+            except IndexError:
+                startendflag = restCP[0][1]
+            if startendflag == "start":
+                returnvec[1].append(VectorNum)
+            elif startendflag == "end":
+                returnvec[2].append(VectorNum)
+            else:
+                print "There is an error in the travaxis == ", traversalAxis, "The Criticalpt here does not have appended text (start/end)"
+                sys.exit(0)
+
+            auxilary.linkPresentAndPastVector(pastVector, [VectorNum], [], False)  # Add this VectorNum to the network
+            pastVector.append(VectorNum)  # Added to pastvectors as will be needed in next slice
+            continue  # Done for this iteration
+
+
+        else:  # Not 2D. We have to prepare to call the lower dimension
+            nextSlice = activeCP[0][0]  # The travaxis value for the recursion slice
+            ellipsesToConsider = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSlice)
+            considerYZ = CriticalPointFunctions.ellipseUnderConsider(ellipsesToConsider, CriticalAlongOthers,
+                                                                     CriticalAlongTraversal, nextSlice,
+                                                                     traversalAxis, False)
+            sliceVector[traversalAxis] = nextSlice
+
+            # Get the Ellipselist and the originlist for the lower dimensions
+            RecursionEll, RecursionOri = CriticalPointFunctions.ReduceEllipsoids(ellipsesToConsider, considerYZ,
+                                                                                 sliceVector,
+                                                                                 traversalAxis,
+                                                                                 deepcopy(ellipseMatrixList),
+                                                                                 deepcopy(originList), debug)
+
+            # obtainedvec is the otherside of returnvec
+            obtainedvec = createRoad(traversalAxis + 1, restCP, sliceVector, RecursionOri, RecursionEll, debug=False)
+
+            presentVector = obtainedvec[0][:]
+            presentVector.extend(obtainedvec[2][:])  # For Doubts regarding the obtainedvec/returnvec refer to README.md
+            auxilary.endRecur_link(pastVector, presentVector, False)
+
+            pastVector = obtainedvec[0][:]
+            pastVector.extend(obtainedvec[1][:])  # Preparing the real pastVector for the next slice.
+
+    for edgeindex, edge in enumerate(SHARED.adjmatrix):
+        print >> errorOut, edgeindex, "edge == ", edge
+    for coorindex, coor in enumerate(SHARED.adjcoordinates):
+        print >> errorOut, coorindex, "coor == ", coor
+    return returnvec
+
+# ------------------------------------ Private Methods-----------------------------------#
+
+# The statelist gives the status of whether a particular slice is inside or outside of the ellipse in question
+# State dictates where a slice
+# interacts with the nth ellipse
+# Called inout in earlier versions
+
+def processForFirstOrLastSlice(iteration, nextSlice, pastvector, presentVector, returnvec, sliceVector,
+                               traversalAxis, debug):
+    if debug: print "in Slice " + str(iteration) + " sliceVector == ", sliceVector
+    sliceVector[traversalAxis] = nextSlice  # No need for the old information
+    if debug: print "in Slice 0, sliceVector == ", sliceVector
+    returnvec, presentVector = LastOrFirstSlice(returnvec, presentVector, sliceVector)
+    if iteration == SHARED.iterate - 1:
+        pastvector = auxilary.complete_link(pastvector, presentVector, False)
+    else:
+        pastvector = presentVector[:]
+    return pastvector, returnvec
+
+# we have to extract the correct vector using the slice vector and the list in consider YZ
+def extractCorrectVectorUsingConsiderYZ(considerYZ, index, sliceVector, traversalAxis, debug):
+    vector = sliceVector[:]
+    for i in range(SHARED.dim - (traversalAxis + 1)):
+        vector[(traversalAxis + 1) + i] = considerYZ[index][i]
+    if debug: print "For the sliceVector ", sliceVector, "gotten the following vector to run intersect along, ", vector
+    return vector
+
+
+def findInterSectionPointsAlongFirstAxis(axis2, ellipseMatrixList, errorOut, firstLink, iteration, originList,
+                                         presentVector, sliceVector, traversalAxis):
+    solution, valid = auxilary.getIntersectionPointAlongtravAxis(ellipseMatrixList[0], originList[0],
+                                                                 sliceVector[(traversalAxis):], axis2)
+    vector = sliceVector[:]
+    # Later check also that it is not inside any of the other ellipsoids --> todo
+    if valid == 1:
+        if solution[0] == solution[1] and firstLink != 1:
+            raise AssertionError("Error, this is not supposed to happen, both the solutions are equal. "
+                                 "But letting it be for Now. iteration == ", iteration, solution, sliceVector)
+        for sol in solution:
+            print >> errorOut, "For axis == ", axis2, " for vector == ", vector, " found solution == ", sol
+
+            vector[traversalAxis + 1] = sol
+
+            VectorNum = rd.addToVertices(vector[:])
+            presentVector.append(VectorNum)
+            # returnvec[0].append( VectorNum )
+            # Some processing needs to be done --> ? todo
+
+
+def findIntersectionPointsBetweenEllipseAndSlice(axis2, ellipse, origin, presentVector, traversalAxis, vector):
+
+    solution, valid = auxilary.getIntersectionPointAlongtravAxis(ellipse, origin, vector[(traversalAxis):],
+                                                                 axis2, False)
+    if valid == 1:
+        if solution[0] == solution[1]:
+            print "Check2, Error! This is not supposed to happen, both the solutions are equal."
+            sys.exit(0)
+        for sol in solution:
+            vector[traversalAxis + 1] = sol
+            VectorNum = rd.addToVertices(vector)
+            presentVector.append(VectorNum)
+            # returnvec[0].append( VectorNum )
+
+
+
+def initialize(traversalAxis, parentVector, originList, ellipseMatrixList, debug=False):
+    sliceEllipseStateList = [0 for x in range(0, len(ellipseMatrixList))]
+    firstLinkInSlice = 0
+
+    # Calculate startPoint
+    sol, valid = auxilary.getIntersectionPointAlongtravAxis \
+        (ellipseMatrixList[0], originList[0], parentVector[traversalAxis:], traversalAxis, False)
+
+    if valid != 1:
+        raise ValueError("Error in initialize function in calculation of start point of slicing  "
+                         "This is a serious error and never should have come up. Exiting")
+    elif debug:
+        print "In initialize function in calculation of start point of slicing, Solutions == ", sol
+
+    sliceVector = parentVector[:]  # In the first call, parent vector is [0 for x in range(SH.dim)]
+    sliceVector[traversalAxis] = min(sol[0], sol[1]);  # Start point of recursion
+
+    if debug:
+        print "In intialize, the debug is on so the info is as follows"
+        print "statelist == ", sliceEllipseStateList
+        print "firstlink == ", firstLinkInSlice
+        print "slicevector == ", sliceVector
+        print "startpoint == ", sliceVector[traversalAxis]
+
+    return sliceEllipseStateList, firstLinkInSlice, sliceVector
+
+
+def initRecursion():
+    returnvec = [[], [], []]
+    pastvector = []
+    presentvector = []
+    return returnvec, pastvector, presentvector
+
+
+def getNextSlice(startpt, iteration):
+    # Distance moved on along the traversal axis in this iteration
+    travaxisDist = startpt + ((startpt) * (-2) * (iteration)) / (SHARED.iterate - 1)
+    return travaxisDist
+
+
+def LastOrFirstSlice(returnvec, presentvector, slicevector):
+    VectorNum = rd.addToVertices(slicevector)
+    returnvec[0].append(VectorNum)
+    presentvector = [VectorNum]
+    return returnvec, presentvector
