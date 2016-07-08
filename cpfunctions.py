@@ -151,18 +151,23 @@ def RecurCheck(critical, presentslice, nextslice, debug=False):
     return CritAtThisSlice
 
 
-def RecursionPoints(CriticalX, CriticalYZ, presentslice, nextslice, debug=False):
-    activeCP = []
-    restCP = []
-    if debug: print "CriticalX, presentslice, nextslice == ", CriticalX, presentslice, nextslice
+def retrieveActiveCPsForSlice(CriticalX, CriticalYZ, presentslice, nextslice, debug=False):
+    activeCPsForSlice = []
     for tupl, rest in zip(CriticalX, CriticalYZ):
         if presentslice < tupl[0] < nextslice:
-            activeCP.append([tupl[0], "start"])
-            restCP.append([rest[0], "start"])
+            criticalPoint = [tupl[0]] + rest[0]
+            activeCPsForSlice.append([criticalPoint, "start"])
         elif presentslice < tupl[1] < nextslice:
-            activeCP.append([tupl[1], "end"])
-            restCP.append([rest[1], "end"])
-    return activeCP, restCP
+            criticalPoint = [tupl[1]] + rest[1]
+            activeCPsForSlice.append([criticalPoint, "end"])
+    return activeCPsForSlice
+
+
+def retrieveCPValuesAlongLowerDim(activeCPsForSlice):
+    CPValuesForRemaningDim = []
+    for cp in activeCPsForSlice:
+        CPValuesForRemaningDim.append([cp[0][1:], cp[1]])
+    return CPValuesForRemaningDim
 
 
 def ellipseUnderConsider(considerlist, CriticalYZ, CriticalX, nextslice, travaxis, debug=False):

@@ -76,25 +76,19 @@ def createRoad(context, debug=False):
 
         # Now Begins Work of Critical points
         nextSliceValue = getNextSlice(startPoint, iteration + 1)  # nextSliceValue is a value of next iteration
-        # ActiveCP and restCP have the value for any critcal points found at this stage. The active is along the travaxis and restCP is for recursion
-        activeCP, restCP = CriticalPointFunctions.RecursionPoints(CriticalAlongTraversal, CriticalAlongOthers,
+        activeCPsForSlice = CriticalPointFunctions.retrieveActiveCPsForSlice(CriticalAlongTraversal, CriticalAlongOthers,
                                                                   sliceVector[traversalAxis],
-                                                                  nextSliceValue, False)
+                                                                  nextSliceValue)
         # To find which critical points from higher level have to be attached at this stage
         criticalPoints = RoadContext.getCriticalPoints(context)
         CritAtThisSlice = CriticalPointFunctions.RecurCheck(criticalPoints, sliceVector[traversalAxis], nextSliceValue,
                                                             False)
 
-        if len(activeCP) + len(CritAtThisSlice) > 1:
+        if len(activeCPsForSlice) + len(CritAtThisSlice) > 1:
             print "System Limitation. We are just working with one critical point between two slices presently. A solution could be to increase the iterate variable, so slices come closer"
             print "It could be be the critical points from higher dimension and this one are crowding together."
             sys.exit(0)
-        if len(activeCP) + len(CritAtThisSlice) == 0: continue
-
-        # We work on the CritAtThisSlice one first
-        # if len(CritAtThisSlice) > 0:						#If count is greater than 0, first recursion worked
-        # 	print activeCP, restCP, CritAtThisSlice, sliceVector
-        # 	raw_input("reached here")
+        if len(activeCPsForSlice) + len(CritAtThisSlice) == 0: continue
 
         if (SHARED.dim - traversalAxis) == 2:  # Reached the 2D case - Base Case
             CPvector = sliceVector[:]  # CPvector will be manipulated to represent the critical val
@@ -103,14 +97,14 @@ def createRoad(context, debug=False):
             try:
                 point = CritAtThisSlice[0][0]  # System Limitation, only account for one critical point
             except IndexError:
-                point = [activeCP[0][0]] + restCP[0][0]
+                point = activeCPsForSlice[0][0]
             for index, term in enumerate(point):
                 CPvector[traversalAxis + index] = term  # CPvector will be added to the Graph after this
             VectorNum = rd.addToVertices(CPvector)
             try:
                 startendflag = CritAtThisSlice[0][1]
             except IndexError:
-                startendflag = restCP[0][1]
+                startendflag = activeCPsForSlice[0][1]
             if startendflag == "start":
                 returnvec[1].append(VectorNum)
             elif startendflag == "end":
@@ -125,7 +119,7 @@ def createRoad(context, debug=False):
 
 
         else:  # Not 2D. We have to prepare to call the lower dimension
-            nextSliceValue = activeCP[0][0]  # The travaxis value for the recursion slice
+            nextSliceValue = activeCPsForSlice[0][0][0]  # The travaxis value for the recursion slice
             booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSliceValue)
             otherAxesValueForEllsToConsiderExceptPrimary = CriticalPointFunctions.ellipseUnderConsider(booleanValuesForEllipsesToConsiderExceptPrimary, CriticalAlongOthers,
                                                                      CriticalAlongTraversal, nextSliceValue,
@@ -140,8 +134,9 @@ def createRoad(context, debug=False):
                                                                                  deepcopy(originList), debug)
 
             # obtainedvec is the otherside of returnvec
+            cpValuesAlongRemainingDim = CriticalPointFunctions.retrieveCPValuesAlongLowerDim(activeCPsForSlice)
             recursionContext = RoadContext()
-            recursionContext.setCriticalPointsReturnSelf(restCP).setTraversalAxisReturnSelf(traversalAxis + 1).\
+            recursionContext.setCriticalPointsReturnSelf(cpValuesAlongRemainingDim).setTraversalAxisReturnSelf(traversalAxis + 1).\
                 setEllipseListReturnSelf(RecursionEll).setOriginListReturnSelf(RecursionOri).setParentVectorReturnSelf(sliceVector)
             obtainedvec = createRoad(recursionContext, debug)
 
