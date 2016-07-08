@@ -1,15 +1,13 @@
-import numpy as np
-import sys, time
-import numpy.linalg as linalg
 import math
+import sys
+import time
 
-import shared as SH
-import auxilary as aux
-import graph as graph
-import plot as myplt
-import processAndValidateInput as cmpl #Actually use this
-import cpfunctions
+import numpy as np
+import numpy.linalg as linalg
+
 import rdfunctions
+import shared as SH
+
 
 #####################
 # links the the present vector points of the last slice of an obstacle to the previous slice

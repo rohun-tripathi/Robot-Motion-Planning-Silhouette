@@ -6,10 +6,19 @@ import cpfunctions as CriticalPointFunctions
 import rdfunctions as rd
 import shared as SHARED
 
+from CreateRoadContext import RoadContext
+
 CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST = 1
 
 
-def createRoad(traversalAxis, criticalPoints, parentVector, originList, ellipseMatrixList, debug=False):
+def createRoad(context, debug=False):
+
+    #traversalAxis, criticalPoints, parentVector, originList, ellipseMatrixList,
+    traversalAxis = RoadContext.getTraversalAxis(context)
+    parentVector = RoadContext.getParentVector(context)
+    originList = RoadContext.getOriginList(context)
+    ellipseMatrixList = RoadContext.getEllipseList(context)
+
     stateList, firstLink, sliceVector, returnvec, pastVector, presentVector = initialize \
         (traversalAxis, parentVector, originList, ellipseMatrixList, debug)
     errorOut = open("debuginfo.txt", "w")
@@ -73,6 +82,7 @@ def createRoad(traversalAxis, criticalPoints, parentVector, originList, ellipseM
                                                                   sliceVector[traversalAxis],
                                                                   nextSlice, False)
         # To find which critical points from higher level have to be attached at this stage
+        criticalPoints = RoadContext.getCriticalPoints(context)
         CritAtThisSlice = CriticalPointFunctions.RecurCheck(criticalPoints, sliceVector[traversalAxis], nextSlice,
                                                             False)
 
@@ -131,7 +141,10 @@ def createRoad(traversalAxis, criticalPoints, parentVector, originList, ellipseM
                                                                                  deepcopy(originList), debug)
 
             # obtainedvec is the otherside of returnvec
-            obtainedvec = createRoad(traversalAxis + 1, restCP, sliceVector, RecursionOri, RecursionEll, debug=False)
+            recursionContext = RoadContext()
+            recursionContext.setCriticalPointsReturnSelf(restCP).setTraversalAxisReturnSelf(traversalAxis + 1).\
+                setEllipseListReturnSelf(RecursionEll).setOriginListReturnSelf(RecursionOri).setParentVectorReturnSelf(sliceVector)
+            obtainedvec = createRoad(recursionContext, debug)
 
             presentVector = obtainedvec[0][:]
             presentVector.extend(obtainedvec[2][:])  # For Doubts regarding the obtainedvec/returnvec refer to README.md
