@@ -6,7 +6,7 @@ def addToRoadmap(vector1, vector2, Distance,
     SH.adjmatrix.append([vector1, vector2, Distance, String])
 
 
-def addToVertices(vector1):
+def addToVertices(vector):
     SH.valcount += 1
-    SH.adjcoordinates.append(vector1[:])
+    SH.adjcoordinates.append(vector[:])
     return SH.valcount
