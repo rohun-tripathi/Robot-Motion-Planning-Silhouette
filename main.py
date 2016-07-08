@@ -12,7 +12,7 @@ debug = False
 
 inputFile = "input3D_2.txt"
 
-originList, ellipseList = processAndValidateInput.processInput([], [], inputFile)
+originList, ellipseList = processAndValidateInput.processInput(inputFile)
 
 context = CreateRoadContext.RoadContext()
 context.setEllipseListReturnSelf(ellipseList).setParentVectorReturnSelf([0 for x in range(SH.dim)]).\

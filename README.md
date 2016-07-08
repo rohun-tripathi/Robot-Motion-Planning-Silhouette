@@ -1,6 +1,6 @@
 Read this README to gain an idea about the functiosn of different files : 
 
-The RecursionPoints function can be improved. It does not account for the obstacle that starts and ends between two slices.
+The Recursion Points function can be improved. It does not account for the obstacle that starts and ends between two slices.
 
 Lists that are screwing with me:
 StateList - [0 for x in range( len(ellipselist) )]
