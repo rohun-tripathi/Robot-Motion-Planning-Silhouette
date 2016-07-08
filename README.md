@@ -6,7 +6,10 @@ Lists that are screwing with me:
 StateList - [0 for x in range( len(ellipselist) )]
 This makes it for ALL the ellipsoids that collide with slice in question
 
-The retrunvec list in the createroad function. This function has three lists of its own. The first is the normal inersection points of the recursion that have to be conencted to the pastvector when the recursion returns. The second and third are for the critical points. The firts of those are only to be added to the future slices and not this one. The third is the critical points that are the end of an ellipse and are not to added to future vectors, just pastvectors.
+The retrunvec list in the createroad function. This function has three lists of its own.
+The first is the normal intersection points of the recursion that have to be conencted to the pastvector when the recursion returns.
+The second and third are for the critical points. The first of those are only to be added to the future slices and not this one.
+The third is the critical points that are the end of an ellipse and are not to added to future vectors, just pastvectors.
 
 1. auxilary.py : this contains auxilary functios used by the other python files
 2. auxilary_backup is just a copy of the above file. Last checked it was the same file on 27th Feb 4:32

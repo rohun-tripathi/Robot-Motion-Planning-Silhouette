@@ -8,6 +8,31 @@ class RoadContext :
         self.parentVector = [0 for x in range(SHARED.dim)]
         self.originList = []
         self.ellipseList = []
+        self.sliceEllipseStateList = [0 for x in range(0, len(self.ellipseList))]
+        self.sliceVector = []
+        self.sliceVectorList = []
+        self.returnvec = []
+
+    def setReturnvecListReturnSelf(self, returnvec):
+        self.returnvec = returnvec
+        return self
+
+    def getReturnvec(self):
+        return self.returnvec
+
+    def setSliceVectorListReturnSelf(self, sliceVectorList):
+        self.sliceVectorList = sliceVectorList
+        return self
+
+    def getSliceVectorList(self):
+        return self.sliceVectorList
+
+    def setSliceVectorReturnSelf(self, sliceVector):
+        self.sliceVector = sliceVector
+        return self
+
+    def getSliceVector(self):
+        return self.sliceVector
 
     def setTraversalAxisReturnSelf(self, traversalAxis):
         self.traversalAxis = traversalAxis
@@ -43,3 +68,11 @@ class RoadContext :
 
     def getEllipseList(self):
         return self.ellipseList
+
+    def setSliceEllipseStateListReturnSelf(self, sliceEllipseStateList):
+        self.sliceEllipseStateList = sliceEllipseStateList
+        return self
+
+    def getSliceEllipseStateList(self):
+        return self.sliceEllipseStateList
+

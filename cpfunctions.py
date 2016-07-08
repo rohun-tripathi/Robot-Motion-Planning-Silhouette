@@ -190,44 +190,28 @@ def ellipseUnderConsider(considerlist, CriticalYZ, CriticalX, nextslice, travaxi
 # The returned list - Criticalpts, is a list of length n-1, where n is the ellipses being considered for this slice
 # Create separate lists for the travaxis and other axes, both of length n-1
 ############################
-def cpCalculate(traversalAxis, originlist, ellipselist, debug=False):
-    CriticalPoints = []
+def cpCalculate(originlist, ellipselist, debug=False):
+
+    CriticalPointPairs = []
     for ellipse, origin in zip(ellipselist[1:], originlist[1:]):
+
         ellipseInverse = linalg.pinv(np.matrix(ellipse))
-        if debug: print "ellinver == ", ellipseInverse
 
-        # todo Add to the Text How the CP are calculated here
-        # Equation we are using is point = center +/- 1/(sqrt(ellipseInverse[0][0])) * ellipseInverse * E1
-        # Here E1 is a one column matrix with only first value = 1 and others 0
+        # Calculate root of ellinver[0][0]. denominator -> a - c1 = sqrt(A^{-1}[0][0])
+        mult = ellipseInverse.item((0, 0))
+        denominator = np.sqrt(mult)
 
-        # Calculate ellinver[][]
-        mult = ellipseInverse.item((0, 0))  # works only for [0][0] --> ? todo
-        criticalVal = np.sqrt(mult)
-
-        if debug:
-            print "criticalVal == ", criticalVal
-            print "mult == ", mult
-
-        # Calculate ellipseInverse * E1
-        # The length depends n the traversal axis presently. at the zeroth level the complete thing. Else [travaxis:]
-        # What happened here? --> todo why isn't the traversalAxis used here?
+        # Calculate ellipseInverse * e1. e1 = [1, 0, 0, ..... 0]
         ellipseInvRow = np.array(ellipseInverse[0][:])
 
-        # Calculate point
-        posneg = [-1, 1]
-        cpEllipse = []
+        # The two critical values come using the +/- for the sqrt value
+        cpPairForEllipse = []
+        for PosnegValue in [-1, 1]:
+            cpVector = np.array(origin) + PosnegValue * (1 / denominator) * ellipseInvRow
+            cpPairForEllipse.append(np.array(cpVector)[0].tolist())
+        CriticalPointPairs.append(cpPairForEllipse)
 
-        # The two cricat values come using the +/- for the sqrt value
-        for PosnegValue in posneg:  # todo chnage
-            cpVector = PosnegValue * 1 / criticalVal * ellipseInvRow + np.array(origin)
-            # The main equation ^ of this part of the code. Equation of "Criticality" -- > todo mention
-            if debug: print "cpVector == ", cpVector
-            cpEllipse.append(np.array(cpVector)[0].tolist())
-        if debug: print "cpEllipse == ", cpEllipse
-        CriticalPoints.append(cpEllipse)
-
-    if debug: print "CriticalPoints == ", CriticalPoints
-    return CriticalPoints
+    return CriticalPointPairs
 
 
 def axisRange(Criticalpt, debug=False):

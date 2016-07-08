@@ -40,10 +40,6 @@ def endRecur_link (P, V, debug = False):			#P - past and V - Presentvector
 # returns the index of vectors in V corresponding to numbers in adjval 
 # The functionality pf link has been understood and the others are just variations as per needs
 def complete_link(P, V, debug = False):			#past and now vector
-	if debug == True: 
-		print "In Complete Link, Pastvector and Present-vector== ", P, V
-		print "Sleeping"
-		time.sleep(3)
 	if len(V) > 1:
 		print "In Complete Link, Pastvector and Present-vector== ", P, V
 		print "The length of Pastvector is greator than 1. \n Should this have happened? Check it.\nExiting"
