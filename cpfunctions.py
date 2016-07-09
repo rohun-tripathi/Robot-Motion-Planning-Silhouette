@@ -141,7 +141,7 @@ def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipsel
     return RecursionEllipses, RecursionOrigins
 
 
-def RecurCheck(critical, presentslice, nextslice, debug=False):
+def retrieveCriticalPointsFromHigherLevel(critical, presentslice, nextslice, debug=False):
     CritAtThisSlice = []
     if debug: print "In RecurCheck and critical, presentslice, nextslice == ", critical, presentslice, nextslice
     for item in critical:
