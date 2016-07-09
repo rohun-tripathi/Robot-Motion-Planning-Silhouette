@@ -24,6 +24,7 @@ def createRoad(context, debug=False):
 
     originList = RoadContext.getOriginList(context)
     ellipseMatrixList = RoadContext.getEllipseList(context)
+
     CriticalPointPairs = CriticalPointFunctions.cpCalculate(originList, ellipseMatrixList, debug)
     CriticalAlongTraversal, CriticalAlongOthers = CriticalPointFunctions.axisRange(CriticalPointPairs, debug)
 
@@ -31,11 +32,11 @@ def createRoad(context, debug=False):
     sliceVector = RoadContext.getSliceVector(context)
     sliceVectorList = RoadContext.getSliceVectorList(context)
     pastVector = [] if len(sliceVectorList) < 2 else sliceVectorList[len(sliceVectorList) - 2]
-    returnvec = VectorsToLink() #done
+    returnvec = VectorsToLink()
 
     startPoint = sliceVector[traversalAxis]
     for iteration in range(SHARED.iterate):
-        presentVector = []
+        presentVector = resetVector()
         nextSliceValue = getNextSlice(startPoint, iteration)
 
         if iteration == 0 or iteration == SHARED.iterate - 1:
@@ -54,7 +55,6 @@ def createRoad(context, debug=False):
         #todo - to be implemented, or does it?
         # Technically if there were any CPs they should have been dealt with by this stage -
         #############################################
-
 
         checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary, debug,
                                                              ellipseMatrixList, originList,
@@ -232,6 +232,10 @@ def initialize(context):
     RoadContext.setSliceEllipseStateListReturnSelf(context, [0 for x in range(0, len(ellipseMatrixList))]) \
         .setSliceVectorReturnSelf(sliceVector).setSliceVectorListReturnSelf([])
     return context
+
+
+def resetVector():
+    return []
 
 
 def getNextSlice(startpt, iteration):
