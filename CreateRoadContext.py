@@ -11,14 +11,6 @@ class RoadContext :
         self.sliceEllipseStateList = [0 for x in range(0, len(self.ellipseList))]
         self.sliceVector = []
         self.sliceVectorList = []
-        self.returnvec = []
-
-    def setReturnvecListReturnSelf(self, returnvec):
-        self.returnvec = returnvec
-        return self
-
-    def getReturnvec(self):
-        return self.returnvec
 
     def setSliceVectorListReturnSelf(self, sliceVectorList):
         self.sliceVectorList = sliceVectorList

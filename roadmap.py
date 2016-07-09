@@ -6,6 +6,7 @@ import cpfunctions as CriticalPointFunctions
 import rdfunctions as rd
 import shared as SHARED
 
+from RecursionResult import VectorsToLink
 from CreateRoadContext import RoadContext
 
 CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST = 1
@@ -30,7 +31,7 @@ def createRoad(context, debug=False):
     sliceVector = RoadContext.getSliceVector(context)
     sliceVectorList = RoadContext.getSliceVectorList(context)
     pastVector = [] if len(sliceVectorList) < 2 else sliceVectorList[len(sliceVectorList) - 2]
-    returnvec = RoadContext.getReturnvec(context)
+    returnvec = VectorsToLink() #done
 
     startPoint = sliceVector[traversalAxis]
     for iteration in range(SHARED.iterate):
@@ -113,9 +114,9 @@ def createRoad(context, debug=False):
             except IndexError:
                 startendflag = activeCPsForSlice[0][1]
             if startendflag == "start":
-                returnvec[1].append(VectorNum)
+                returnvec.getCriticalPointsToLinkToFuture().append(VectorNum)
             elif startendflag == "end":
-                returnvec[2].append(VectorNum)
+                returnvec.getCriticalPointsToLinkToPast().append(VectorNum)
             else:
                 print "There is an error in the travaxis == ", traversalAxis, "The Criticalpt here does not have appended text (start/end)"
                 sys.exit(0)
@@ -144,14 +145,14 @@ def createRoad(context, debug=False):
             recursionContext = RoadContext()
             recursionContext.setCriticalPointsReturnSelf(cpValuesAlongRemainingDim).setTraversalAxisReturnSelf(traversalAxis + 1).\
                 setEllipseListReturnSelf(RecursionEll).setOriginListReturnSelf(RecursionOri).setParentVectorReturnSelf(sliceVector)
-            obtainedvec = createRoad(recursionContext, debug)
+            vectorFromLowerRecursion = createRoad(recursionContext, debug)
 
-            presentVector = obtainedvec[0][:]
-            presentVector.extend(obtainedvec[2][:])
+            presentVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
+            presentVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToPast()[:])
             auxilary.endRecur_link(pastVector, presentVector, False)
 
-            pastVector = obtainedvec[0][:]
-            pastVector.extend(obtainedvec[1][:])  # Preparing the real pastVector for the next slice.
+            pastVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
+            pastVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToFuture()[:])  # Preparing the real pastVector for the next slice.
 
     for edgeindex, edge in enumerate(SHARED.adjmatrix):
         print >> SHARED.errorOut, edgeindex, "edge == ", edge
@@ -170,7 +171,11 @@ def createRoad(context, debug=False):
 def processForFirstOrLastSlice(iteration, nextSlice, pastvector, returnvec, sliceVector,
                                traversalAxis):
     sliceVector[traversalAxis] = nextSlice  # No need for the old information
-    returnvec, presentVector = LastOrFirstSlice(returnvec, sliceVector[:])
+
+    VectorNum = rd.addToVertices(sliceVector[:])
+    returnvec.getIntersectionPointsAlongOtherAxis().append(VectorNum)  # done
+    presentVector = [VectorNum]
+
     if iteration == SHARED.iterate - 1:
         pastvector = auxilary.complete_link(pastvector, presentVector, False)
     else:
@@ -216,8 +221,7 @@ def initialize(context):
     sliceVector[traversalAxis] = min(sol[0], sol[1]);  # Start point of recursion
 
     RoadContext.setSliceEllipseStateListReturnSelf(context, [0 for x in range(0, len(ellipseMatrixList))]) \
-        .setSliceVectorReturnSelf(sliceVector).setSliceVectorListReturnSelf([]).\
-        setReturnvecListReturnSelf([[], [], []])
+        .setSliceVectorReturnSelf(sliceVector).setSliceVectorListReturnSelf([])
     return context
 
 
@@ -226,9 +230,3 @@ def getNextSlice(startpt, iteration):
     travaxisDist = startpt + ((startpt) * (-2) * (iteration)) / (SHARED.iterate - 1)
     return travaxisDist
 
-
-def LastOrFirstSlice(returnvec, slicevector):
-    VectorNum = rd.addToVertices(slicevector)
-    returnvec[0].append(VectorNum)
-    presentvector = [VectorNum]
-    return returnvec, presentvector
