@@ -1,5 +1,9 @@
 Read this README to gain an idea about the functiosn of different files : 
 
+4
+0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 20.0 20.0 20.0 20.0
+0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 10.0 10.0 10.0 10.0
+
 The Recursion Points function can be improved. It does not account for the obstacle that starts and ends between two slices.
 
 Lists that are screwing with me:

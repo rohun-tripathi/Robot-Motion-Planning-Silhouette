@@ -38,8 +38,8 @@ def createRoad(context, debug=False):
         nextSliceValue = getNextSlice(startPoint, iteration)
 
         if iteration == 0 or iteration == SHARED.iterate - 1:
-            pastVector, returnvec = processForFirstOrLastSlice(iteration, nextSliceValue, pastVector, presentVector,
-                                                               returnvec, sliceVector, traversalAxis, debug)
+            pastVector, returnvec = processForFirstOrLastSlice(iteration, nextSliceValue, pastVector,
+                                                               returnvec, sliceVector, traversalAxis)
             continue
 
         booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSliceValue)
@@ -140,7 +140,6 @@ def createRoad(context, debug=False):
                                                                                  deepcopy(ellipseMatrixList),
                                                                                  deepcopy(originList), debug)
 
-            # obtainedvec is the otherside of returnvec
             cpValuesAlongRemainingDim = CriticalPointFunctions.retrieveCPValuesAlongLowerDim(criticalPointsForSlice)
             recursionContext = RoadContext()
             recursionContext.setCriticalPointsReturnSelf(cpValuesAlongRemainingDim).setTraversalAxisReturnSelf(traversalAxis + 1).\
@@ -148,7 +147,7 @@ def createRoad(context, debug=False):
             obtainedvec = createRoad(recursionContext, debug)
 
             presentVector = obtainedvec[0][:]
-            presentVector.extend(obtainedvec[2][:])  # For Doubts regarding the obtainedvec/returnvec refer to README.md
+            presentVector.extend(obtainedvec[2][:])
             auxilary.endRecur_link(pastVector, presentVector, False)
 
             pastVector = obtainedvec[0][:]
@@ -168,10 +167,10 @@ def createRoad(context, debug=False):
 # interacts with the nth ellipse
 # Called inout in earlier versions
 
-def processForFirstOrLastSlice(iteration, nextSlice, pastvector, presentVector, returnvec, sliceVector,
-                               traversalAxis, debug):
+def processForFirstOrLastSlice(iteration, nextSlice, pastvector, returnvec, sliceVector,
+                               traversalAxis):
     sliceVector[traversalAxis] = nextSlice  # No need for the old information
-    returnvec, presentVector = LastOrFirstSlice(returnvec, sliceVector)
+    returnvec, presentVector = LastOrFirstSlice(returnvec, sliceVector[:])
     if iteration == SHARED.iterate - 1:
         pastvector = auxilary.complete_link(pastvector, presentVector, False)
     else:
@@ -198,7 +197,6 @@ def findIntersectionPointsBetweenEllipseAndSlice(axis2, ellipse, origin, present
             vector[traversalAxis + 1] = sol
             VectorNum = rd.addToVertices(vector)
             presentVector.append(VectorNum)
-            # returnvec[0].append( VectorNum )
 
 
 def initialize(context):

@@ -3,6 +3,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import numpy.linalg as linalg
 import matplotlib.pyplot as plt
+import random
+import shared as SH
 
 
 def plotthis(num, ellips, ellarr, tree, adjval):  # module from the net
@@ -93,92 +95,107 @@ def gs(X):
 # this function plots in 3D
 # --------------------------------
 
-def createbasis(num):
-    # plot
-    for turn in range(0, 4):
-        # print "Enter four points which describes the vector perpendicular to the 3D hyperplane"
-        send = []
-        filename = ""
-        for n1 in range(0, 4):
-            if n1 == turn:
-                filename += str(1) + " "
-            else:
-                filename += str(0) + " "
-                send.append(n1)
-        print filename
+def getBasisAndSendVector(positionOnPlot):
+    send = []
+    filename = ""
+    for n1 in range(0, 4):
+        if n1 == positionOnPlot:
+            filename += str(1) + " "
+        else:
+            filename += str(0) + " "
+            send.append(n1)
+    vector = []
+    subspace = []
+    for temp in filename.split():
+        term = temp.strip()
+        vector.append(float(term))
+    subspace.append(vector)
+    # we have put the first one
+    # for random
+    for i in range(0, 3):
         vector = []
-        subspace = []
-        for temp in filename.split():
-            term = temp.strip()
+        for j in range(0, 4):
+            term = random.randrange(0, 5 + 1)  # random number between 0 and 6 including them
             vector.append(float(term))
-
         subspace.append(vector)
-        # print "Points you entered : " , vector
-
-        # we have put the first one
-        # for random
-        for i in range(0, 3):
-            vector = []
-            for j in range(0, 4):
-                term = random.randrange(0, 5 + 1)  # random number between 0 and 6 including them
-                vector.append(float(term))
-            subspace.append(vector)
-        basis = []
-        basis = gs(subspace)
-        temp_turn = 200 + 20 + turn
-        plotthis2(num, basis, temp_turn, send)
+    basis = gs(subspace)
+    return send, basis
 
 
-def plotthis2(num, basis, turn, send):
+def getBasisFromPosition(positionOnPlot):
+    basisForIteration = []
+    baseBasisVector = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+    for index, term in enumerate(baseBasisVector):
+        if index == positionOnPlot: continue
+        basisForIteration.append(term[:])
+    return basisForIteration
+
+
+def project4DTo3DAndDisplay(originList, ellMatrixList):
+    fig = plt.figure()
+    for positionOnPlot in range(0, 4):
+        basis = getBasisFromPosition(positionOnPlot)
+        fig = plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig)
+    plt.show()
+    plt.close(fig)
+    del fig
+
+
+def plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig):
+    plotConfigPlusPosition = 200 + 20 + positionOnPlot
+    ax = fig.add_subplot(plotConfigPlusPosition, projection='3d')
+
     # ---------------------------------
-    # P matrix as described by sir in notes is called Proj
+    # P matrix as described by sir in notes is called projVector
     # ---------------------------------
-    Projtemp = []  # contains vectors in plane first and then orthogonal
-    for i in range(0, len(basis)):
-        Projtemp.append(basis[(i + 1) % dim])
-        # print "Projtemp = ", Projtemp
+    projVector = np.array(basis)
+    projTranspose = projVector.T
 
-    Proj = np.array(Projtemp)
-    Projtrans = Proj.T
-    # print "Proj = ", Proj
+    renderEllipsoids(ax, ellMatrixList, originList, projTranspose, projVector)
+    renderGraph(ax, projVector)
 
-    ax = fig.add_subplot(turn, projection='3d')
-    for k in range(0, num):
+    return fig
 
-        center = ellips[k]
-        # print "center = ", ellips[k]
 
-        A = ellarr[k]
-        # print "A from ellipse list = ", A
+def renderGraph(ax, projVector):
+    adjvalProjected = []
+    for n1 in SH.adjcoordinates:
+        n2 = np.array(n1)
+        adjvalProjected.append(np.dot(projVector, n2))  # Todo check that the dimension reduces.
+    for lin in SH.adjmatrix:
+        print lin
+        n = [];
+        m = [];
+        p = [];
+        for i in range(0, 2):
+            n.append(adjvalProjected[lin[i]][0])
+        for i in range(0, 2):
+            m.append(adjvalProjected[lin[i]][1])
+        for i in range(0, 2):
+            p.append(adjvalProjected[lin[i]][2])
+
+        ax.plot_wireframe(n, m, p, color="green", linewidth=1.5, linestyle="-")
+
+
+def renderEllipsoids(ax, ellMatrixList, originList, projTranspose, projVector):
+    for k in range(0, len(originList)):
+
+        center = originList[k]
+        ellipse = ellMatrixList[k]
 
         # ------------------------
-        # the projected matrix is Proj*A*Projtrans
+        # the projectedMatrix matrix is projVector*A*projTranspose
         # ------------------------
 
-        projected = np.dot(np.dot(Proj, A), Projtrans)
-        projcenter = np.dot(Projtrans, center)
-        print "Projected and projcenter = ", projected, projcenter
+        A = np.dot(np.dot(projVector, ellipse), projTranspose)
+        center = np.dot(projVector, center)
 
-        # print "center and projcenter = " , center,  projcenter
-        # now we have to select the corner nine points from this projected matrix
-
-        center = []
-        A = []
-        for i in range(0, 3):
-            row = []
-            for j in range(0, 3):
-                row.append(projected[i][j])
-            A.append(row)
-        for i in range(0, 3):
-            center.append(projcenter[i])
-
-            # This is the part same as before
-
+        # This is the part same as before
         U, s, rotation = linalg.svd(A)
         radii = 1.0 / np.sqrt(s)
 
-        u = np.linspace(0.0, 2.0 * np.pi, 100)
-        v = np.linspace(0.0, np.pi, 100)
+        u = np.linspace(0.0, 2 * np.pi, 100)
+        v = np.linspace(0.0, 2 * np.pi, 100)
         x = radii[0] * np.outer(np.cos(u), np.sin(v))
         y = radii[1] * np.outer(np.sin(u), np.sin(v))
         z = radii[2] * np.outer(np.ones_like(u), np.cos(v))
@@ -192,27 +209,8 @@ def plotthis2(num, basis, turn, send):
         else:
             ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='r', alpha=0.2)
 
-    adjval_temp = []
-    for n1 in adjval:
-        n2 = np.array(n1)
-        adjval_temp.append(np.dot(Proj, n2))
 
-    for lin in adj:
-        print lin
-        n = [];
-        m = [];
-        p = [];
-        for i in range(0, 2):
-            n.append(adjval_temp[lin[i]][send[0]])
-        for i in range(0, 2):
-            m.append(adjval_temp[lin[i]][send[1]])
-        for i in range(0, 2):
-            p.append(adjval_temp[lin[i]][send[2]])
-
-        ax.plot_wireframe(n, m, p, color="green", linewidth=2.0, linestyle="-")
-
-
-def plotthis3():
+def plot2DProjection():
     # plot
     print "Enter three points which describes the vector perpendicular to the 3D hyperplane"
     filename = str("1") + " " + str("1") + " " + str("1") + " "
