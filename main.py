@@ -10,7 +10,7 @@ import CreateRoadContext
 SH.init()
 debug = False
 
-inputFile = "input3D_2.txt"
+inputFile = "input3D.txt"
 
 originList, ellipseList = processAndValidateInput.processInput(inputFile)
 

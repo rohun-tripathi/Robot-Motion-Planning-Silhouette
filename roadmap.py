@@ -12,15 +12,15 @@ from CreateRoadContext import RoadContext
 CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST = 1
 
 
-#Consider the solution for having a two lists passed down in the context. One has the start set of the CP being passed
-#Other has the set relevant to called recursion.
-#reason : will remove this travaxis and travaxis + 1 bullshit
-#the whole point is needed when adding it to the graph
+# Consider the solution for having a two lists passed down in the context. One has the start set of the CP being passed
+# Other has the set relevant to called recursion.
+# reason : will remove this travaxis and travaxis + 1 bullshit
+# the whole point is needed when adding it to the graph
 
 def createRoad(context, debug=False):
 
     context = initialize(context)
-    #stateList
+    # stateList
 
     originList = RoadContext.getOriginList(context)
     ellipseMatrixList = RoadContext.getEllipseList(context)
@@ -44,7 +44,8 @@ def createRoad(context, debug=False):
                                                                vectorsToLink, sliceVector, traversalAxis)
             continue
 
-        booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSliceValue)
+        booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect\
+            (CriticalAlongTraversal, nextSliceValue)
 
         otherAxesValueForEllsToConsiderExceptPrimary = CriticalPointFunctions.ellipseUnderConsider\
             (booleanValuesForEllipsesToConsiderExceptPrimary, CriticalAlongOthers,
@@ -52,26 +53,27 @@ def createRoad(context, debug=False):
 
         sliceVector[traversalAxis] = nextSliceValue  # No need for the old slice information?
 
-        #todo - to be implemented, or does it?
+        # todo - to be implemented, or does it?
         # Technically if there were any CPs they should have been dealt with by this stage -
         #############################################
 
-        checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary, debug,
+        checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary,
                                                              ellipseMatrixList, originList,
                                                              otherAxesValueForEllsToConsiderExceptPrimary,
                                                              presentVector, sliceVector, traversalAxis)
 
         pastVector = auxilary.linkPresentAndPastVector(pastVector, presentVector, [], debug)
 
-        # Now Begins Work of Critical points
-        nextSliceValue = getNextSlice(startPoint, iteration + 1)  # nextSliceValue is a value of next iteration
+        # Section - Critical points
+        # nextSliceValue is a value of next iteration
+        nextSliceValue = getNextSlice(startPoint, iteration + 1)
         activeCPsForSlice = CriticalPointFunctions.retrieveActiveCPsForSlice(CriticalAlongTraversal, CriticalAlongOthers,
                                                                   sliceVector[traversalAxis],
                                                                   nextSliceValue)
         # To find which critical points from higher level have to be attached at this stage
         criticalPoints = RoadContext.getCriticalPoints(context)
-        criticalPointsFromHigherLevel = CriticalPointFunctions.retrieveCriticalPointsFromHigherLevel(criticalPoints, sliceVector[traversalAxis], nextSliceValue,
-                                                                                                     False)
+        criticalPointsFromHigherLevel = CriticalPointFunctions.retrieveCriticalPointsFromHigherLevel\
+            (criticalPoints, sliceVector[traversalAxis], nextSliceValue)
         criticalPointsForSlice = []
         criticalPointsForSlice.extend(criticalPointsFromHigherLevel)
         criticalPointsForSlice.extend(activeCPsForSlice)
@@ -113,7 +115,7 @@ def processForFirstOrLastSlice(iteration, nextSlice, pastvector, vectorsToLink, 
     presentVector = [VectorNum]
 
     if iteration == SHARED.iterate - 1:
-        pastvector = auxilary.complete_link(pastvector, presentVector, False)
+        pastvector = auxilary.complete_link(pastvector, presentVector)
     else:
         pastvector = presentVector[:]
     return pastvector, vectorsToLink
@@ -121,14 +123,14 @@ def processForFirstOrLastSlice(iteration, nextSlice, pastvector, vectorsToLink, 
 
 def setUpAndStartRecursion(CriticalAlongOthers, CriticalAlongTraversal, criticalPointsForSlice, debug,
                            ellipseMatrixList, originList, pastVector, sliceVector, traversalAxis):
-    # The travaxis value for the recursion slice
+    # The travAxis value for the recursion slice
     nextSliceValue = criticalPointsForSlice[0][0][0]
 
     booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(
         CriticalAlongTraversal, nextSliceValue)
     otherAxesValueForEllsToConsiderExceptPrimary = CriticalPointFunctions.ellipseUnderConsider(
-        booleanValuesForEllipsesToConsiderExceptPrimary, CriticalAlongOthers,CriticalAlongTraversal, nextSliceValue,
-        traversalAxis, False)
+        booleanValuesForEllipsesToConsiderExceptPrimary, CriticalAlongOthers, CriticalAlongTraversal, nextSliceValue,
+        traversalAxis)
 
     sliceVector[traversalAxis] = nextSliceValue
 
@@ -136,10 +138,10 @@ def setUpAndStartRecursion(CriticalAlongOthers, CriticalAlongTraversal, critical
         booleanValuesForEllipsesToConsiderExceptPrimary, otherAxesValueForEllsToConsiderExceptPrimary,
         sliceVector, traversalAxis, deepcopy(ellipseMatrixList), deepcopy(originList), debug)
 
-    cpValuesAlongRemainingDim = CriticalPointFunctions.retrieveCPValuesAlongLowerDim(criticalPointsForSlice)
+    cpValuesRemainingDimParam = CriticalPointFunctions.retrieveCPValuesAlongLowerDim(criticalPointsForSlice)
 
     recursionContext = RoadContext()
-    recursionContext.setCriticalPointsReturnSelf(cpValuesAlongRemainingDim).setTraversalAxisReturnSelf(
+    recursionContext.setCriticalPointsReturnSelf(cpValuesRemainingDimParam).setTraversalAxisReturnSelf(
         traversalAxis + 1).setEllipseListReturnSelf(RecursionEll).setOriginListReturnSelf(RecursionOri).\
         setParentVectorReturnSelf(sliceVector)
 
@@ -147,7 +149,7 @@ def setUpAndStartRecursion(CriticalAlongOthers, CriticalAlongTraversal, critical
 
     presentVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
     presentVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToPast()[:])
-    auxilary.endRecur_link(pastVector, presentVector, False)
+    auxilary.endRecur_link(pastVector, presentVector)
 
     # Preparing the real pastVector for the next slice.
     pastVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
@@ -156,7 +158,7 @@ def setUpAndStartRecursion(CriticalAlongOthers, CriticalAlongTraversal, critical
     return pastVector
 
 
-def checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary, debug,
+def checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary,
                                                          ellipseMatrixList, originList,
                                                          otherAxesValueForEllsToConsiderExceptPrimary, presentVector,
                                                          sliceVector, traversalAxis):
@@ -178,7 +180,7 @@ def checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipse
                 otherAxesValueForEllsToConsiderExceptPrimary[index], sliceVector, SHARED.dim - (traversalAxis + 1))
 
         vector = extractCorrectVectorFromOtherAxesValue(otherAxesValueForEllsToConsiderExceptPrimary, index,
-                                                        sliceVector, traversalAxis, debug)
+                                                        sliceVector, traversalAxis)
 
         findIntersectionPointsBetweenEllipseAndSlice(axisToCheckIntersectionAlong, ellipse, origin, presentVector,
                                                      traversalAxis, vector)
@@ -204,9 +206,8 @@ def connectCPInBase2DCase(criticalPointsForSlice, pastVector, vectorsToLink, sli
     return pastVector
 
 
-
 # we have to extract the correct vector using the slice vector and the list in consider YZ
-def extractCorrectVectorFromOtherAxesValue(considerYZ, index, sliceVector, traversalAxis, debug):
+def extractCorrectVectorFromOtherAxesValue(considerYZ, index, sliceVector, traversalAxis):
     vector = sliceVector[:]
     for i in range(SHARED.dim - (traversalAxis + 1)):
         vector[(traversalAxis + 1) + i] = considerYZ[index][i]
@@ -214,8 +215,8 @@ def extractCorrectVectorFromOtherAxesValue(considerYZ, index, sliceVector, trave
 
 
 def findIntersectionPointsBetweenEllipseAndSlice(axisToCheckIntersectionAlong, ellipse, origin, presentVector, traversalAxis, vector):
-    solution, valid = auxilary.getIntersectionPointAlongtravAxis(ellipse, origin, vector[(traversalAxis):],
-                                                                 axisToCheckIntersectionAlong, False)
+    solution, valid = auxilary.getIntersectionPointAlongtravAxis(ellipse, origin, vector[traversalAxis:],
+                                                                 axisToCheckIntersectionAlong)
     if valid == 1:
         if solution[0] == solution[1]:
             print "Check2, Error! This is not supposed to happen, both the solutions are equal."
@@ -234,15 +235,15 @@ def initialize(context):
 
     # Solve for startPoint, if solvable
     sol, valid = auxilary.getIntersectionPointAlongtravAxis \
-        (ellipseMatrixList[0], originList[0], parentVector[traversalAxis:], 0, False)
+        (ellipseMatrixList[0], originList[0], parentVector[traversalAxis:], 0)
 
     if valid != 1: raise ValueError("Error in initialize function in calculation of start point of slicing  "
                          "This is a serious error and never should have come up. Exiting")
 
     sliceVector = parentVector[:]  # In the first call, parent vector is [0 for x in range(SH.dim)]
-    sliceVector[traversalAxis] = min(sol[0], sol[1]);  # Start point of recursion
+    sliceVector[traversalAxis] = min(sol[0], sol[1])  # Start point of recursion
 
-    RoadContext.setSliceEllipseStateListReturnSelf(context, [0 for x in range(0, len(ellipseMatrixList))]) \
+    RoadContext.setSliceEllipseStateListReturnSelf(context, [0 in range(0, len(ellipseMatrixList))]) \
         .setSliceVectorReturnSelf(sliceVector).setSliceVectorListReturnSelf([])
     return context
 
@@ -251,8 +252,7 @@ def resetVector():
     return []
 
 
-def getNextSlice(startpt, iteration):
+def getNextSlice(startPt, iteration):
     # Distance moved on along the traversal axis in this iteration
-    travaxisDist = startpt + ((startpt) * (-2) * (iteration)) / (SHARED.iterate - 1)
-    return travaxisDist
-
+    traversalAxisDist = startPt + (startPt * (-2) * iteration) / (SHARED.iterate - 1)
+    return traversalAxisDist

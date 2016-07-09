@@ -66,9 +66,9 @@ def complete_link(P, V, debug=False):  # past and now vector
 # The functionality pf link has been understood and the others are just variations as per needs
 def linkPresentAndPastVector(P, V, CV, debug=False):  # past and now vector
     if debug == True: print "Pastvector and Present-vector and CV== ", P, V, CV
-
+    # move the two below to the same function
     for i in range(0, len(V)):
-        inf = 0;
+        inf = 0
         val = 23456789  # high value
         for j in range(0, len(P)):
             one = np.array(SH.adjcoordinates[V[i]])
