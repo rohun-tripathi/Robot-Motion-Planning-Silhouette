@@ -50,33 +50,16 @@ def createRoad(context, debug=False):
              CriticalAlongTraversal, nextSliceValue, traversalAxis, debug)
 
         sliceVector[traversalAxis] = nextSliceValue  # No need for the old slice information?
-        # Technically if there were any CPs they should have been dealt with by this stage - todo - to be implemented
+
+        #todo - to be implemented, or does it?
+        # Technically if there were any CPs they should have been dealt with by this stage -
         #############################################
-        # The Intersect and creation of presentVector
-        #############################################
 
-        # first for the first ellipse
-        axis2 = 1
-        findIntersectionPointsBetweenEllipseAndSlice(axis2, ellipseMatrixList[0], originList[0], presentVector,
-                                                         traversalAxis, sliceVector[:])
 
-        for index, ellipseFlag in enumerate(booleanValuesForEllipsesToConsiderExceptPrimary):
-            if ellipseFlag == 0: continue
-
-            # We have to find the correct ellipse and remember to account for the first ellipse being primA
-            if debug: print "Working for obstacle, index no. ", index
-            ellipse = ellipseMatrixList[index + CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST]
-            origin = originList[index + CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST]
-
-            if not len(otherAxesValueForEllsToConsiderExceptPrimary[index]) == SHARED.dim - (traversalAxis + 1):
-                raise IndexError("Error! The \"rest of slice vector\" and vector from otherAxesValueForEllsToConsiderExceptPrimary should have same len.",
-                                 otherAxesValueForEllsToConsiderExceptPrimary[index], sliceVector, SHARED.dim - (traversalAxis + 1))
-
-            vector = extractCorrectVectorFromOtherAxesValue(otherAxesValueForEllsToConsiderExceptPrimary, index, sliceVector, traversalAxis, debug)
-
-            axis2 = 1
-            findIntersectionPointsBetweenEllipseAndSlice(axis2, ellipse, origin, presentVector, traversalAxis,
-                                                             vector)
+        checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary, debug,
+                                                             ellipseMatrixList, originList,
+                                                             otherAxesValueForEllsToConsiderExceptPrimary,
+                                                             presentVector, sliceVector, traversalAxis)
 
         pastVector = auxilary.linkPresentAndPastVector(pastVector, presentVector, [], debug)
 
@@ -99,31 +82,9 @@ def createRoad(context, debug=False):
             print "It could be be the critical points from higher dimension and this one are crowding together."
             sys.exit(0)
 
-        if (SHARED.dim - traversalAxis) == 2:  # Reached the 2D case - Base Case
-            CPvector = sliceVector[:]  # CPvector will be manipulated to represent the critical val
-
-            try:
-                point = criticalPointsFromHigherLevel[0][0]  # System Limitation, only account for one critical point
-            except IndexError:
-                point = activeCPsForSlice[0][0]
-            for index, term in enumerate(point):
-                CPvector[traversalAxis + index] = term  # CPvector will be added to the Graph after this
-            VectorNum = rd.addToVertices(CPvector)
-            try:
-                startendflag = criticalPointsFromHigherLevel[0][1]
-            except IndexError:
-                startendflag = activeCPsForSlice[0][1]
-            if startendflag == "start":
-                returnvec.getCriticalPointsToLinkToFuture().append(VectorNum)
-            elif startendflag == "end":
-                returnvec.getCriticalPointsToLinkToPast().append(VectorNum)
-            else:
-                print "There is an error in the travaxis == ", traversalAxis, "The Criticalpt here does not have appended text (start/end)"
-                sys.exit(0)
-
-            auxilary.linkPresentAndPastVector(pastVector, [VectorNum], [], False)  # Add this VectorNum to the network
-            pastVector.append(VectorNum)  # Added to pastvectors as will be needed in next slice
-            continue  # Done for this iteration
+        if (SHARED.dim - traversalAxis) == 2:  # 2D case - Base Case
+            pastVector = connectCPInBase2DCase(criticalPointsForSlice, pastVector, returnvec, sliceVector, traversalAxis)
+            continue
 
 
         else:  # Not 2D. We have to prepare to call the lower dimension
@@ -160,7 +121,6 @@ def createRoad(context, debug=False):
         print >> SHARED.errorOut, coorindex, "coor == ", coor
     return returnvec
 
-
 # ------------------------------------ Private Methods-----------------------------------#
 
 # The statelist gives the status of whether a particular slice is inside or outside of the ellipse in question
@@ -183,6 +143,55 @@ def processForFirstOrLastSlice(iteration, nextSlice, pastvector, returnvec, slic
     return pastvector, returnvec
 
 
+def checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary, debug,
+                                                         ellipseMatrixList, originList,
+                                                         otherAxesValueForEllsToConsiderExceptPrimary, presentVector,
+                                                         sliceVector, traversalAxis):
+    # first for the first ellipse
+    axisToCheckIntersectionAlong = 1
+    findIntersectionPointsBetweenEllipseAndSlice(axisToCheckIntersectionAlong, ellipseMatrixList[0], originList[0],
+                                                 presentVector, traversalAxis, sliceVector[:])
+
+    for index, ellipseFlag in enumerate(booleanValuesForEllipsesToConsiderExceptPrimary):
+        if ellipseFlag == 0: continue
+
+        # We have to find the correct ellipse and remember to account for the first ellipse being primA
+        ellipse = ellipseMatrixList[index + CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST]
+        origin = originList[index + CONSTANT_TO_ACCOUNT_FOR_PRIMARY_ELLIPSE_SKIPPED_FROM_LIST]
+
+        if not len(otherAxesValueForEllsToConsiderExceptPrimary[index]) == SHARED.dim - (traversalAxis + 1):
+            raise IndexError(
+                "Error! The \"rest of slice vector\" and vector from otherAxesValueForEllsToConsiderExceptPrimary should have same len.",
+                otherAxesValueForEllsToConsiderExceptPrimary[index], sliceVector, SHARED.dim - (traversalAxis + 1))
+
+        vector = extractCorrectVectorFromOtherAxesValue(otherAxesValueForEllsToConsiderExceptPrimary, index,
+                                                        sliceVector, traversalAxis, debug)
+
+        findIntersectionPointsBetweenEllipseAndSlice(axisToCheckIntersectionAlong, ellipse, origin, presentVector,
+                                                     traversalAxis, vector)
+
+
+def connectCPInBase2DCase(criticalPointsForSlice, pastVector, returnvec, sliceVector, traversalAxis):
+    cpVector = sliceVector[:]
+    point = criticalPointsForSlice[0][0]  # System Limitation, only account for one critical point
+
+    for index, term in enumerate(point):
+        cpVector[traversalAxis + index] = term
+    VectorNum = rd.addToVertices(cpVector)
+
+    startendflag = criticalPointsForSlice[0][1]
+    if startendflag == "start":
+        returnvec.getCriticalPointsToLinkToFuture().append(VectorNum)
+    elif startendflag == "end":
+        returnvec.getCriticalPointsToLinkToPast().append(VectorNum)
+
+    presentVector = [VectorNum]
+    auxilary.linkPresentAndPastVector(pastVector, presentVector, [])  # Add this VectorNum to the network
+    pastVector.append(VectorNum)  # Added to pastvectors as will be needed in next slice
+    return pastVector
+
+
+
 # we have to extract the correct vector using the slice vector and the list in consider YZ
 def extractCorrectVectorFromOtherAxesValue(considerYZ, index, sliceVector, traversalAxis, debug):
     vector = sliceVector[:]
@@ -191,9 +200,9 @@ def extractCorrectVectorFromOtherAxesValue(considerYZ, index, sliceVector, trave
     return vector
 
 
-def findIntersectionPointsBetweenEllipseAndSlice(axis2, ellipse, origin, presentVector, traversalAxis, vector):
+def findIntersectionPointsBetweenEllipseAndSlice(axisToCheckIntersectionAlong, ellipse, origin, presentVector, traversalAxis, vector):
     solution, valid = auxilary.getIntersectionPointAlongtravAxis(ellipse, origin, vector[(traversalAxis):],
-                                                                 axis2, False)
+                                                                 axisToCheckIntersectionAlong, False)
     if valid == 1:
         if solution[0] == solution[1]:
             print "Check2, Error! This is not supposed to happen, both the solutions are equal."
