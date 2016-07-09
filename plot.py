@@ -163,7 +163,6 @@ def renderGraph(ax, projVector):
         n2 = np.array(n1)
         adjvalProjected.append(np.dot(projVector, n2))  # Todo check that the dimension reduces.
     for lin in SH.adjmatrix:
-        print lin
         n = [];
         m = [];
         p = [];

@@ -32,7 +32,7 @@ def createRoad(context, debug=False):
     sliceVector = RoadContext.getSliceVector(context)
     sliceVectorList = RoadContext.getSliceVectorList(context)
     pastVector = [] if len(sliceVectorList) < 2 else sliceVectorList[len(sliceVectorList) - 2]
-    returnvec = VectorsToLink()
+    vectorsToLink = VectorsToLink()
 
     startPoint = sliceVector[traversalAxis]
     for iteration in range(SHARED.iterate):
@@ -40,8 +40,8 @@ def createRoad(context, debug=False):
         nextSliceValue = getNextSlice(startPoint, iteration)
 
         if iteration == 0 or iteration == SHARED.iterate - 1:
-            pastVector, returnvec = processForFirstOrLastSlice(iteration, nextSliceValue, pastVector,
-                                                               returnvec, sliceVector, traversalAxis)
+            pastVector, vectorsToLink = processForFirstOrLastSlice(iteration, nextSliceValue, pastVector,
+                                                               vectorsToLink, sliceVector, traversalAxis)
             continue
 
         booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSliceValue)
@@ -83,43 +83,20 @@ def createRoad(context, debug=False):
             sys.exit(0)
 
         if (SHARED.dim - traversalAxis) == 2:  # 2D case - Base Case
-            pastVector = connectCPInBase2DCase(criticalPointsForSlice, pastVector, returnvec, sliceVector, traversalAxis)
+            pastVector = connectCPInBase2DCase(criticalPointsForSlice, pastVector, vectorsToLink, sliceVector, traversalAxis)
             continue
 
-
-        else:  # Not 2D. We have to prepare to call the lower dimension
-            nextSliceValue = criticalPointsForSlice[0][0][0]  # The travaxis value for the recursion slice
-            booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(CriticalAlongTraversal, nextSliceValue)
-            otherAxesValueForEllsToConsiderExceptPrimary = CriticalPointFunctions.ellipseUnderConsider(booleanValuesForEllipsesToConsiderExceptPrimary, CriticalAlongOthers,
-                                                                     CriticalAlongTraversal, nextSliceValue,
-                                                                     traversalAxis, False)
-            sliceVector[traversalAxis] = nextSliceValue
-
-            # Get the Ellipselist and the originlist for the lower dimensions
-            RecursionEll, RecursionOri = CriticalPointFunctions.ReduceEllipsoids(booleanValuesForEllipsesToConsiderExceptPrimary, otherAxesValueForEllsToConsiderExceptPrimary,
-                                                                                 sliceVector,
-                                                                                 traversalAxis,
-                                                                                 deepcopy(ellipseMatrixList),
-                                                                                 deepcopy(originList), debug)
-
-            cpValuesAlongRemainingDim = CriticalPointFunctions.retrieveCPValuesAlongLowerDim(criticalPointsForSlice)
-            recursionContext = RoadContext()
-            recursionContext.setCriticalPointsReturnSelf(cpValuesAlongRemainingDim).setTraversalAxisReturnSelf(traversalAxis + 1).\
-                setEllipseListReturnSelf(RecursionEll).setOriginListReturnSelf(RecursionOri).setParentVectorReturnSelf(sliceVector)
-            vectorFromLowerRecursion = createRoad(recursionContext, debug)
-
-            presentVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
-            presentVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToPast()[:])
-            auxilary.endRecur_link(pastVector, presentVector, False)
-
-            pastVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
-            pastVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToFuture()[:])  # Preparing the real pastVector for the next slice.
+        else:
+            pastVector = setUpAndStartRecursion(CriticalAlongOthers, CriticalAlongTraversal, criticalPointsForSlice,
+                                                debug, ellipseMatrixList, originList, pastVector, sliceVector,
+                                                traversalAxis)
 
     for edgeindex, edge in enumerate(SHARED.adjmatrix):
         print >> SHARED.errorOut, edgeindex, "edge == ", edge
     for coorindex, coor in enumerate(SHARED.adjcoordinates):
         print >> SHARED.errorOut, coorindex, "coor == ", coor
-    return returnvec
+    return vectorsToLink
+
 
 # ------------------------------------ Private Methods-----------------------------------#
 
@@ -128,19 +105,55 @@ def createRoad(context, debug=False):
 # interacts with the nth ellipse
 # Called inout in earlier versions
 
-def processForFirstOrLastSlice(iteration, nextSlice, pastvector, returnvec, sliceVector,
-                               traversalAxis):
+def processForFirstOrLastSlice(iteration, nextSlice, pastvector, vectorsToLink, sliceVector, traversalAxis):
     sliceVector[traversalAxis] = nextSlice  # No need for the old information
 
     VectorNum = rd.addToVertices(sliceVector[:])
-    returnvec.getIntersectionPointsAlongOtherAxis().append(VectorNum)  # done
+    vectorsToLink.getIntersectionPointsAlongOtherAxis().append(VectorNum)  # done
     presentVector = [VectorNum]
 
     if iteration == SHARED.iterate - 1:
         pastvector = auxilary.complete_link(pastvector, presentVector, False)
     else:
         pastvector = presentVector[:]
-    return pastvector, returnvec
+    return pastvector, vectorsToLink
+
+
+def setUpAndStartRecursion(CriticalAlongOthers, CriticalAlongTraversal, criticalPointsForSlice, debug,
+                           ellipseMatrixList, originList, pastVector, sliceVector, traversalAxis):
+    # The travaxis value for the recursion slice
+    nextSliceValue = criticalPointsForSlice[0][0][0]
+
+    booleanValuesForEllipsesToConsiderExceptPrimary = CriticalPointFunctions.ellipseSliceintersect(
+        CriticalAlongTraversal, nextSliceValue)
+    otherAxesValueForEllsToConsiderExceptPrimary = CriticalPointFunctions.ellipseUnderConsider(
+        booleanValuesForEllipsesToConsiderExceptPrimary, CriticalAlongOthers,CriticalAlongTraversal, nextSliceValue,
+        traversalAxis, False)
+
+    sliceVector[traversalAxis] = nextSliceValue
+
+    RecursionEll, RecursionOri = CriticalPointFunctions.ReduceEllipsoids(
+        booleanValuesForEllipsesToConsiderExceptPrimary, otherAxesValueForEllsToConsiderExceptPrimary,
+        sliceVector, traversalAxis, deepcopy(ellipseMatrixList), deepcopy(originList), debug)
+
+    cpValuesAlongRemainingDim = CriticalPointFunctions.retrieveCPValuesAlongLowerDim(criticalPointsForSlice)
+
+    recursionContext = RoadContext()
+    recursionContext.setCriticalPointsReturnSelf(cpValuesAlongRemainingDim).setTraversalAxisReturnSelf(
+        traversalAxis + 1).setEllipseListReturnSelf(RecursionEll).setOriginListReturnSelf(RecursionOri).\
+        setParentVectorReturnSelf(sliceVector)
+
+    vectorFromLowerRecursion = createRoad(recursionContext, debug)
+
+    presentVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
+    presentVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToPast()[:])
+    auxilary.endRecur_link(pastVector, presentVector, False)
+
+    # Preparing the real pastVector for the next slice.
+    pastVector = vectorFromLowerRecursion.getIntersectionPointsAlongOtherAxis()[:]
+    pastVector.extend(vectorFromLowerRecursion.getCriticalPointsToLinkToFuture()[:])
+
+    return pastVector
 
 
 def checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipsesToConsiderExceptPrimary, debug,
@@ -171,7 +184,7 @@ def checkIntersectionAlongOtherAxisForEllipsoidsForSlice(booleanValuesForEllipse
                                                      traversalAxis, vector)
 
 
-def connectCPInBase2DCase(criticalPointsForSlice, pastVector, returnvec, sliceVector, traversalAxis):
+def connectCPInBase2DCase(criticalPointsForSlice, pastVector, vectorsToLink, sliceVector, traversalAxis):
     cpVector = sliceVector[:]
     point = criticalPointsForSlice[0][0]  # System Limitation, only account for one critical point
 
@@ -181,9 +194,9 @@ def connectCPInBase2DCase(criticalPointsForSlice, pastVector, returnvec, sliceVe
 
     startendflag = criticalPointsForSlice[0][1]
     if startendflag == "start":
-        returnvec.getCriticalPointsToLinkToFuture().append(VectorNum)
+        vectorsToLink.getCriticalPointsToLinkToFuture().append(VectorNum)
     elif startendflag == "end":
-        returnvec.getCriticalPointsToLinkToPast().append(VectorNum)
+        vectorsToLink.getCriticalPointsToLinkToPast().append(VectorNum)
 
     presentVector = [VectorNum]
     auxilary.linkPresentAndPastVector(pastVector, presentVector, [])  # Add this VectorNum to the network

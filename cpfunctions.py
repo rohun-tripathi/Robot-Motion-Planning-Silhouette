@@ -137,7 +137,6 @@ def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipsel
             RecursionEllipses.append(newmatrix[:])
             RecursionOrigins.append(center2nd[:])
     print "RecursionEllipses, RecursionOrigins == ", RecursionEllipses, RecursionOrigins
-    # raw_input("Press Enter to continue.... ")
     return RecursionEllipses, RecursionOrigins
 
 
