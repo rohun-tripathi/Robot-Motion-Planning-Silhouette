@@ -7,6 +7,12 @@ import numpy.linalg as linalg
 
 import shared as SH
 
+import rdfunctions as rd
+
+import CriticalPointsDetail
+
+LARGE_VALUE = sys.maxsize
+
 
 def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, debug=False):
     topcorner = ellipse[0][0]
@@ -150,15 +156,16 @@ def retrieveCriticalPointsFromHigherLevel(critical, presentslice, nextslice, deb
     return CritAtThisSlice
 
 
-def retrieveActiveCPsForSlice(CriticalX, CriticalYZ, presentslice, nextslice, debug=False):
+def retrieveActiveCPsForSlice(criticalPointPairList, presentSlice, nextSlice):
     activeCPsForSlice = []
-    for tupl, rest in zip(CriticalX, CriticalYZ):
-        if presentslice < tupl[0] < nextslice:
-            criticalPoint = [tupl[0]] + rest[0]
-            activeCPsForSlice.append([criticalPoint, "start"])
-        elif presentslice < tupl[1] < nextslice:
-            criticalPoint = [tupl[1]] + rest[1]
-            activeCPsForSlice.append([criticalPoint, "end"])
+    for cpPair in criticalPointPairList:
+        firstCP = cpPair.getFirstCP()
+        secondCP = cpPair.getSecondCP()
+
+        if cpPair.getValidityOfFirst() and presentSlice < firstCP[0] < nextSlice:
+            activeCPsForSlice.append([firstCP[:], "start"])
+        elif cpPair.getValidityOfSecond() and presentSlice < secondCP[0] < nextSlice:
+            activeCPsForSlice.append([secondCP[:], "end"])
     return activeCPsForSlice
 
 
@@ -194,43 +201,56 @@ def ellipseUnderConsider(considerlist, CriticalYZ, CriticalX, nextslice, travaxi
 # The returned list - Criticalpts, is a list of length n-1, where n is the ellipses being considered for this slice
 # Create separate lists for the travaxis and other axes, both of length n-1
 ############################
-def cpCalculate(originlist, ellipselist, debug=False):
+def cpCalculate(originList, ellipseList, travAxis):
 
     CriticalPointPairs = []
-    for ellipse, origin in zip(ellipselist[1:], originlist[1:]):
+    for ellipse, origin in zip(ellipseList[1:], originList[1:]):
 
         ellipseInverse = linalg.pinv(np.matrix(ellipse))
 
         # Calculate root of ellinver[0][0]. denominator -> a - c1 = sqrt(A^{-1}[0][0])
-        mult = ellipseInverse.item((0, 0))
-        denominator = np.sqrt(mult)
+        multiply = ellipseInverse.item((0, 0))
+        denominator = np.sqrt(multiply)
 
         # Calculate ellipseInverse * e1. e1 = [1, 0, 0, ..... 0]
         ellipseInvRow = np.array(ellipseInverse[0][:])
 
         # The two critical values come using the +/- for the sqrt value
-        cpPairForEllipse = []
-        for PosnegValue in [-1, 1]:
-            cpVector = np.array(origin) + PosnegValue * (1 / denominator) * ellipseInvRow
-            cpPairForEllipse.append(np.array(cpVector)[0].tolist())
-        CriticalPointPairs.append(cpPairForEllipse)
+        cpPair = populateCriticalPointValueAndValidity(denominator, ellipseInvRow, ellipseList, origin, originList,
+                                                       travAxis)
+        CriticalPointPairs.append(cpPair)
 
     return CriticalPointPairs
 
 
-def axisRange(Criticalpt, debug=False):
+def populateCriticalPointValueAndValidity(denominator, ellipseInvRow, ellipseList, origin, originList, travAxis):
+    cpPair = CriticalPointsDetail.CriticalPointPair()
+
+    cpVector = np.array(origin) + -1 * (1 / denominator) * ellipseInvRow
+    if rd.checkValidityOfPoint(cpVector[0], originList, ellipseList, travAxis):
+        cpPair.setFirstCPReturnSelf(np.array(cpVector)[0].tolist()).setValidityOfFirst(True)
+    else:
+        cpPair.setFirstCPReturnSelf(np.array(cpVector)[0].tolist()).setValidityOfFirst(False)
+
+    cpVector = np.array(origin) + 1 * (1 / denominator) * ellipseInvRow
+    if rd.checkValidityOfPoint(cpVector[0], originList, ellipseList, travAxis):
+        cpPair.setSecondCPReturnSelf(np.array(cpVector)[0].tolist()).setValidityOfSecond(True)
+    else:
+        cpPair.setSecondCPReturnSelf(np.array(cpVector)[0].tolist()).setValidityOfSecond(False)
+    return cpPair
+
+
+def axisRange(criticalPointPairList):
     # This function returns the range of the values of the travaxis and the other axis separately for easier calculation
     traversalAxisRange = []
     remainingAxisRange = []
-    for Cpoint in Criticalpt:
-        if len(Cpoint) != 2:
-            raise ValueError("No Two Critical Points Found.", Cpoint, Criticalpt)
+    for cpPair in criticalPointPairList:
 
-        # The smaller value, in respect to the X axis is first in the list
-        traversalAxisRange.append([Cpoint[0][0], Cpoint[1][0]])
-        remainingAxisRange.append([Cpoint[0][(1):], Cpoint[1][(1):]])
+        firstCP = cpPair.getFirstCP()
+        secondCP = cpPair.getSecondCP()
+        traversalAxisRange.append([firstCP[0], secondCP[0]])
+        remainingAxisRange.append([firstCP[1:], secondCP[1:]])
 
-    if debug: print "Travaxis and otheraxis = ", traversalAxisRange, remainingAxisRange
     return traversalAxisRange, remainingAxisRange
 
 

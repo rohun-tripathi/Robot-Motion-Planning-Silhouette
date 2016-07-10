@@ -15,8 +15,8 @@ import shared as SH
 def endRecur_link(P, V, debug=False):  # P - past and V - Presentvector
     linked = []
     for i in range(0, len(V)):
-        inf = 0;
-        val = 23456789  # high value
+        inf = 0
+        val = sys.maxsize  # high value
         for j in range(0, len(P)):
             one = np.array(SH.adjcoordinates[V[i]])
             two = np.array(SH.adjcoordinates[P[j]])
@@ -30,7 +30,7 @@ def endRecur_link(P, V, debug=False):  # P - past and V - Presentvector
         linked.append(inf)
     diffList = [x for x in P if x not in linked]
     if debug == True: print "diffList, linked, pastvector == ", diffList, linked, P
-    linkPresentAndPastVector(V, diffList, [], debug)
+    linkToPastVector(V, diffList, [], debug)
 
 
 #####################
@@ -42,12 +42,17 @@ def endRecur_link(P, V, debug=False):  # P - past and V - Presentvector
 def complete_link(P, V, debug=False):  # past and now vector
     if len(V) > 1:
         print "In Complete Link, Pastvector and Present-vector== ", P, V
-        print "The length of Pastvector is greator than 1. \n Should this have happened? Check it.\nExiting"
+        print "The length of presentVector is greator than 1. \n Should this have happened? Check it.\nExiting"
+        sys.exit(0)
+
+    if len(P) == 1:
+        print "In Complete Link, Pastvector and Present-vector== ", P, V
+        print "The length of pastVector 1! \n Should this have happened? Check it.\nExiting"
         sys.exit(0)
 
     for i in range(0, len(V)):
-        inf = 0;
-        val = 23456789  # high value
+        inf = 0
+        val = sys.maxsize  # high value
         for j in range(0, len(P)):
             one = np.array(SH.adjcoordinates[V[i]])
             two = np.array(SH.adjcoordinates[P[j]])
@@ -64,12 +69,20 @@ def complete_link(P, V, debug=False):  # past and now vector
 # creates adjacency list adj. adjval stores the point in N dimension for each point index
 # returns the index of vectors in V corresponding to numbers in adjval 
 # The functionality pf link has been understood and the others are just variations as per needs
-def linkPresentAndPastVector(P, V, CV, debug=False):  # past and now vector
-    if debug == True: print "Pastvector and Present-vector and CV== ", P, V, CV
-    # move the two below to the same function
+def linkToPastVector(pastVector, presentVector, criticalPoints, debug=False):  # past and now vector
+
+    if len(pastVector) != 0:
+        findPointAtMinimumDistanceAndLink(pastVector, presentVector)
+
+        findPointAtMinimumDistanceAndLink(pastVector, criticalPoints)
+    presentVector.extend(criticalPoints)
+    return presentVector
+
+
+def findPointAtMinimumDistanceAndLink(P, V):
     for i in range(0, len(V)):
         inf = 0
-        val = 23456789  # high value
+        val = sys.maxsize  # high value
         for j in range(0, len(P)):
             one = np.array(SH.adjcoordinates[V[i]])
             two = np.array(SH.adjcoordinates[P[j]])
@@ -78,24 +91,7 @@ def linkPresentAndPastVector(P, V, CV, debug=False):  # past and now vector
             if val >= three:
                 val = three
                 inf = P[j]
-        if debug == True: print "For the ", i, "th presentvector, the inf== ", inf
         rdfunctions.addToRoadmap(V[i], inf, val, "link")  # the weight is val
-
-    for i in range(0, len(CV)):
-        inf = 0;
-        val = 23456789  # high value
-        for j in range(0, len(P)):
-            one = np.array(SH.adjcoordinates[CV[i]])
-            two = np.array(SH.adjcoordinates[P[j]])
-            three = linalg.norm(one - two)
-
-            if val >= three:
-                val = three
-                inf = P[j]
-        if debug == True: print "For the ", i, "th CV, the inf== ", inf
-        rdfunctions.addToRoadmap(CV[i], inf, val, "link")  # the weight is val
-    V.extend(CV)
-    return V
 
 
 #############################

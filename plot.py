@@ -7,7 +7,7 @@ import random
 import shared as SH
 
 
-def plotthis(num, ellips, ellarr, tree, adjval):  # module from the net
+def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval):  # module from the net
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
@@ -51,75 +51,26 @@ def plotthis(num, ellips, ellarr, tree, adjval):  # module from the net
         # pprint.pprint(a)
         ax.plot(n, m, p, color="green", linewidth=2.0, linestyle="-")
 
+    showThenCloseThenDelFig(fig)
+
+
+def showThenCloseThenDelFig(fig):
     plt.show()
     plt.close(fig)  # print "finished plotthis"
     del fig
 
 
-# ---------------------------------------------------------
-# Code region to calculate the Gram Smidt Orthogonalization
-# ----------------------------------------------------------
-
-def modulus(v1):
-    mod = float(np.sqrt(float(np.dot(v1, v1))))
-    return [x / mod for x in v1]
-
-
-def gs_cofficient(v1, v2):  # Gram Smidt Coefficient
-    return np.dot(v2, v1) / np.dot(v1, v1)
-
-
-def multiply(cofficient, v):
-    return [x * cofficient for x in v]
-
-
-def proj(v1, v2):
-    return multiply(gs_cofficient(v1, v2), v1)
-
-
-def gs(X):
-    mod_vec = 0.0
-    Y = []
-    for i in range(len(X)):
-        temp_vec = X[i]
-        for inY in Y:
-            proj_vec = proj(inY, X[i])
-            temp_vec = map(lambda x, y: x - y, temp_vec, proj_vec)
-        mod_vec = modulus(temp_vec)
-        Y.append(mod_vec)
-        # print "The final matrix returned from gs Y = ", Y
-    return Y
-
-
 # --------------------------------
-# this function plots in 3D
+# this function plots in 4D
 # --------------------------------
 
-def getBasisAndSendVector(positionOnPlot):
-    send = []
-    filename = ""
-    for n1 in range(0, 4):
-        if n1 == positionOnPlot:
-            filename += str(1) + " "
-        else:
-            filename += str(0) + " "
-            send.append(n1)
-    vector = []
-    subspace = []
-    for temp in filename.split():
-        term = temp.strip()
-        vector.append(float(term))
-    subspace.append(vector)
-    # we have put the first one
-    # for random
-    for i in range(0, 3):
-        vector = []
-        for j in range(0, 4):
-            term = random.randrange(0, 5 + 1)  # random number between 0 and 6 including them
-            vector.append(float(term))
-        subspace.append(vector)
-    basis = gs(subspace)
-    return send, basis
+def project4DTo3DAndDisplay(originList, ellMatrixList):
+    fig = plt.figure()
+    for positionOnPlot in range(0, 4):
+        basis = getBasisFromPosition(positionOnPlot)
+        fig = plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig)
+    showThenCloseThenDelFig(fig)
+
 
 
 def getBasisFromPosition(positionOnPlot):
@@ -129,16 +80,6 @@ def getBasisFromPosition(positionOnPlot):
         if index == positionOnPlot: continue
         basisForIteration.append(term[:])
     return basisForIteration
-
-
-def project4DTo3DAndDisplay(originList, ellMatrixList):
-    fig = plt.figure()
-    for positionOnPlot in range(0, 4):
-        basis = getBasisFromPosition(positionOnPlot)
-        fig = plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig)
-    plt.show()
-    plt.close(fig)
-    del fig
 
 
 def plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig):
@@ -207,6 +148,12 @@ def renderEllipsoids(ax, ellMatrixList, originList, projTranspose, projVector):
             ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=0.2)
         else:
             ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='r', alpha=0.2)
+
+
+# --------------------------------
+# this function plots in 2D
+# Todo
+# --------------------------------
 
 
 def plot2DProjection():
@@ -308,6 +255,66 @@ def plot2DProjection():
             m.append(adjval[lin[i]][0])
         ax.plot(n, m, color="green", linewidth=2.0, linestyle="-")
 
-    plt.show()
-    plt.close(fig)
-    del fig
+    showThenCloseThenDelFig(fig)
+
+
+# ---------------------------------------------------------
+# Code region to calculate the Gram Smidt Orthogonalization
+# ----------------------------------------------------------
+
+def modulus(v1):
+    mod = float(np.sqrt(float(np.dot(v1, v1))))
+    return [x / mod for x in v1]
+
+
+def gs_cofficient(v1, v2):  # Gram Smidt Coefficient
+    return np.dot(v2, v1) / np.dot(v1, v1)
+
+
+def multiply(cofficient, v):
+    return [x * cofficient for x in v]
+
+
+def proj(v1, v2):
+    return multiply(gs_cofficient(v1, v2), v1)
+
+
+def gs(X):
+    mod_vec = 0.0
+    Y = []
+    for i in range(len(X)):
+        temp_vec = X[i]
+        for inY in Y:
+            proj_vec = proj(inY, X[i])
+            temp_vec = map(lambda x, y: x - y, temp_vec, proj_vec)
+        mod_vec = modulus(temp_vec)
+        Y.append(mod_vec)
+        # print "The final matrix returned from gs Y = ", Y
+    return Y
+
+
+def getBasisAndSendVector(positionOnPlot):
+    send = []
+    filename = ""
+    for n1 in range(0, 4):
+        if n1 == positionOnPlot:
+            filename += str(1) + " "
+        else:
+            filename += str(0) + " "
+            send.append(n1)
+    vector = []
+    subspace = []
+    for temp in filename.split():
+        term = temp.strip()
+        vector.append(float(term))
+    subspace.append(vector)
+    # we have put the first one
+    # for random
+    for i in range(0, 3):
+        vector = []
+        for j in range(0, 4):
+            term = random.randrange(0, 5 + 1)  # random number between 0 and 6 including them
+            vector.append(float(term))
+        subspace.append(vector)
+    basis = gs(subspace)
+    return send, basis
