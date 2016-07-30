@@ -1,7 +1,7 @@
 # noinspection PyUnresolvedReferences
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-import numpy.linalg as linalg
+import numpy.linalg as linAlg
 import matplotlib.pyplot as plt
 import random
 import shared as SH
@@ -16,7 +16,7 @@ def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval):  # module from the
         center = ellips[k]  # print "center = ", center
         A = ellarr[k]  # print "a = ", A
 
-        U, s, rotation = linalg.svd(A)
+        U, s, rotation = linAlg.svd(A)
         radii = 1.0 / np.sqrt(s)
 
         u = np.linspace(0.0, 2 * np.pi, 100)
@@ -34,13 +34,10 @@ def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval):  # module from the
         else:
             ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='r', alpha=0.2)
 
-            # print "x = ", x, len(x[0]) 		# print "y = ", y, len(y) 		# print "Z = ", z, len(z)
-
-    # This part plots the tree in the ellipses
     for index, lin in enumerate(tree):
-        n = [];
-        m = [];
-        p = [];
+        n = []
+        m = []
+        p = []
         for i in range(0, 2):
             n.append(adjval[lin[i]][0])
         for i in range(0, 2):
@@ -51,12 +48,12 @@ def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval):  # module from the
         # pprint.pprint(a)
         ax.plot(n, m, p, color="green", linewidth=2.0, linestyle="-")
 
-    showThenCloseThenDelFig(fig)
+    showThenCloseAndDelFig(fig)
 
 
-def showThenCloseThenDelFig(fig):
+def showThenCloseAndDelFig(fig):
     plt.show()
-    plt.close(fig)  # print "finished plotthis"
+    plt.close(fig)
     del fig
 
 
@@ -64,27 +61,33 @@ def showThenCloseThenDelFig(fig):
 # this function plots in 4D
 # --------------------------------
 
-def project4DTo3DAndDisplay(originList, ellMatrixList):
-    fig = plt.figure()
-    for positionOnPlot in range(0, 4):
-        basis = getBasisFromPosition(positionOnPlot)
-        fig = plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig)
-    showThenCloseThenDelFig(fig)
+#TODO start from here. The 2D projection is not working properly for aligned 3D ellipse
 
+def projectHigherToLowerAndDisplay(originList, ellMatrixList):
+    fig = plt.figure()
+    for positionOnPlot in range(SH.dim):
+        basis = getBasisFromPosition(positionOnPlot)
+        fig = plotUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig)
+    showThenCloseAndDelFig(fig)
 
 
 def getBasisFromPosition(positionOnPlot):
     basisForIteration = []
-    baseBasisVector = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+    baseBasisVector = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]] \
+        if SH.dim == 4 else [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     for index, term in enumerate(baseBasisVector):
         if index == positionOnPlot: continue
         basisForIteration.append(term[:])
     return basisForIteration
 
 
-def plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig):
-    plotConfigPlusPosition = 200 + 20 + positionOnPlot
-    ax = fig.add_subplot(plotConfigPlusPosition, projection='3d')
+def plotUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig):
+    if SH.dim == 4:
+        plotConfigPlusPosition = 220 + positionOnPlot
+        ax = fig.add_subplot(plotConfigPlusPosition, projection='3d')
+    else:
+        plotConfigPlusPosition = 130 + positionOnPlot
+        ax = fig.add_subplot(plotConfigPlusPosition)
 
     # ---------------------------------
     # P matrix as described by sir in notes is called projVector
@@ -100,13 +103,21 @@ def plot4DUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig):
 
 def renderGraph(ax, projVector):
     adjvalProjected = []
-    for n1 in SH.adjcoordinates:
-        n2 = np.array(n1)
-        adjvalProjected.append(np.dot(projVector, n2))  # Todo check that the dimension reduces.
+    for coordinate in SH.adjcoordinates:
+        arrayCoor = np.array(coordinate)
+        adjvalProjected.append(np.dot(projVector, arrayCoor))
+
+    if SH.dim == 4:
+        plot3DProjectionOfGraph(adjvalProjected, ax)
+    else:
+        plot2DProjectionOfGraph(adjvalProjected, ax)
+
+
+def plot3DProjectionOfGraph(adjvalProjected, ax):
     for lin in SH.adjmatrix:
-        n = [];
-        m = [];
-        p = [];
+        n = []
+        m = []
+        p = []
         for i in range(0, 2):
             n.append(adjvalProjected[lin[i]][0])
         for i in range(0, 2):
@@ -115,6 +126,18 @@ def renderGraph(ax, projVector):
             p.append(adjvalProjected[lin[i]][2])
 
         ax.plot_wireframe(n, m, p, color="green", linewidth=1.5, linestyle="-")
+
+
+def plot2DProjectionOfGraph(adjvalProjected, ax):
+    for lin in SH.adjmatrix:
+        n = []
+        m = []
+        for i in range(0, 2):
+            n.append(adjvalProjected[lin[i]][0])
+        for i in range(0, 2):
+            m.append(adjvalProjected[lin[i]][1])
+
+        ax.plot(n, m, color="green", linewidth=2.0, linestyle="-")
 
 
 def renderEllipsoids(ax, ellMatrixList, originList, projTranspose, projVector):
@@ -131,23 +154,44 @@ def renderEllipsoids(ax, ellMatrixList, originList, projTranspose, projVector):
         center = np.dot(projVector, center)
 
         # This is the part same as before
-        U, s, rotation = linalg.svd(A)
+        U, s, rotation = linAlg.svd(A)
         radii = 1.0 / np.sqrt(s)
 
-        u = np.linspace(0.0, 2 * np.pi, 100)
-        v = np.linspace(0.0, 2 * np.pi, 100)
-        x = radii[0] * np.outer(np.cos(u), np.sin(v))
-        y = radii[1] * np.outer(np.sin(u), np.sin(v))
-        z = radii[2] * np.outer(np.ones_like(u), np.cos(v))
-
-        for i in range(len(x)):
-            for j in range(len(x)):
-                [x[i, j], y[i, j], z[i, j]] = np.dot([x[i, j], y[i, j], z[i, j]], rotation) + center
-
-        if k == 0:
-            ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=0.2)
+        if SH.dim == 4:
+            plot3DProjectionOfEll(ax, center, k, radii, rotation)
         else:
-            ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='r', alpha=0.2)
+            plot2DProjectionOfEll(ax, center, k, radii, rotation)
+
+
+def plot3DProjectionOfEll(ax, center, ellipseIndex, radii, rotation):
+    u = np.linspace(0.0, 2 * np.pi, 100)
+    v = np.linspace(0.0, 2 * np.pi, 100)
+    x = radii[0] * np.outer(np.cos(u), np.sin(v))
+    y = radii[1] * np.outer(np.sin(u), np.sin(v))
+    z = radii[2] * np.outer(np.ones_like(u), np.cos(v))
+    for i in range(len(x)):
+        for j in range(len(x)):
+            [x[i, j], y[i, j], z[i, j]] = np.dot([x[i, j], y[i, j], z[i, j]], rotation) + center
+    if ellipseIndex == 0:
+        ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='b', alpha=0.2)
+    else:
+        ax.plot_wireframe(x, y, z, rstride=4, cstride=4, color='r', alpha=0.2)
+
+
+def plot2DProjectionOfEll(ax, center, ellipseIndex, radii, rotation):
+    u = np.linspace(0.0, 2 * np.pi, 100)
+    v = np.linspace(0.0, 2 * np.pi, 100)
+    x = radii[0] * np.outer(np.cos(u), np.sin(v))
+    y = radii[1] * np.outer(np.sin(u), np.sin(v))
+
+    for i in range(len(x)):
+        for j in range(len(x)):
+            [x[i, j], y[i, j]] = np.dot([x[i, j], y[i, j]], rotation) + center
+
+    if ellipseIndex == 0:
+        ax.plot(x, y, c='b', label='2D projection', linewidth=0.2, linestyle="-")
+    else:
+        ax.plot(x, y, c='r', linewidth=0.2, linestyle="-")
 
 
 # --------------------------------
@@ -228,14 +272,13 @@ def plot2DProjection():
 
             # This is the part same as before
 
-        U, s, rotation = linalg.svd(A)
+        U, s, rotation = linAlg.svd(A)
         radii = 1.0 / np.sqrt(s)
 
         u = np.linspace(0.0, 2.0 * np.pi, 100)
         v = np.linspace(0.0, np.pi, 100)
         x = radii[0] * np.outer(np.cos(u), np.sin(v))
         y = radii[1] * np.outer(np.sin(u), np.sin(v))
-        # z = radii[2] * np.outer(np.ones_like(u), np.cos(v))
 
         for i in range(len(x)):
             for j in range(len(x)):
@@ -255,7 +298,7 @@ def plot2DProjection():
             m.append(adjval[lin[i]][0])
         ax.plot(n, m, color="green", linewidth=2.0, linestyle="-")
 
-    showThenCloseThenDelFig(fig)
+    showThenCloseAndDelFig(fig)
 
 
 # ---------------------------------------------------------

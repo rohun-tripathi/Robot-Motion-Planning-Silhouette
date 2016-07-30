@@ -30,7 +30,7 @@ def find(x):
 def main(nodenum, edges):
 
 	weight = 0.0
-	#print "edges = " , edges
+
 	for counter in range(0,nodenum):#for each node
 		parent.append(int(counter))
 		rank.append(int(0))

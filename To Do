@@ -1,3 +1,18 @@
-Test the Reduce Ellipsoids for other Ellipsoids
+Todo:
 
-Finish the module for ellipsoid interaction
+1. generate a case where Djikstra’s algorithm traces the path from the start to the goal.
+
+
+----
+
+
+
+1. implementation of the new model for the 4D case and its representation and projection onto the 3D case - add the pretty cases when the recursion begins
+
+2. Intersecting obstacle - try this scenario - one obstacle on top of another ones critical point. - Test thoroughly. Especially after the start and end is figured
+
+4. fix the projection shit code for 2D - fails as soon as an angular 3D ellipse is provided
+
+5. allow multiple CPs between slices
+
+mention that the first prob solution is the "Equation of "Criticality""
