@@ -1,28 +1,32 @@
-import sys
-
 import numpy as np
+import numpy.linalg as linalg
+import sys, time
 
 import shared as SH
+import auxilary as aux
 
 
-def processInput(inputfile):
-    origin_list = []
-    ellipse_list = []
-    inp = open(inputfile, "r").readlines()  # Write the code to validate the input files
-    for index, l in enumerate(inp):
+def process_file_input(inputfile):
+    inp = open(inputfile, "r").readlines()
+    return process_input(inp)
+
+
+def process_input(input_lines):
+    originlist = []
+    ellipselist = []
+
+    for index, l in enumerate(input_lines):
         parts = l.strip().split()
         if index == 0:
-            SH.num = len(inp) - 1  # Number of ellipses = Number of lines - line for dim
+            SH.num = len(input_lines) - 1  # Number of ellipses = Number of lines - line for dim
             SH.dim = int(parts[0])  # dim is for the dimensions being used
             continue
         else:
-            if SH.dim == 0:
-                print "error in input as dim = 0"
-                sys.exit()
-            origin = []  # first detail in line is origin
+            # first detail in line is origin
+            origin = []
             for i in range(SH.dim):
                 origin.append(float(parts[i]))
-            origin_list.append(origin)  # store the center values for the nth ellipse
+            originlist.append(origin)  # store the center values for the nth ellipse
             carry = SH.dim;  # carry tracks how many have been read and where to read from next
 
             Umatrix = []  # holds the U matrix in 2d list form
@@ -50,5 +54,5 @@ def processInput(inputfile):
             mult1 = np.dot(U, eye)
             mult2 = np.dot(mult1, trans)  # A = U * eye * U.T
             # print "A for this iteration = ", mult2
-            ellipse_list.append(mult2)
-    return origin_list, ellipse_list
+            ellipselist.append(mult2)
+    return originlist, ellipselist

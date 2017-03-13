@@ -7,7 +7,7 @@ import random
 import shared as SH
 
 
-def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval):  # module from the net
+def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval, file_name="foo.png"):  # module from the net
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
@@ -48,12 +48,12 @@ def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval):  # module from the
         # pprint.pprint(a)
         ax.plot(n, m, p, color="green", linewidth=2.0, linestyle="-")
 
-    showThenCloseAndDelFig(fig)
+    showThenCloseAndDelFig(fig, file_name)
 
 
-def showThenCloseAndDelFig(fig):
+def showThenCloseAndDelFig(fig, file_name):
+    plt.savefig(file_name)
     plt.show()
-    plt.close(fig)
     del fig
 
 
@@ -68,7 +68,7 @@ def projectHigherToLowerAndDisplay(originList, ellMatrixList):
     for positionOnPlot in range(SH.dim):
         basis = getBasisFromPosition(positionOnPlot)
         fig = plotUsingBasis(basis, positionOnPlot, originList, ellMatrixList, fig)
-    showThenCloseAndDelFig(fig)
+    showThenCloseAndDelFig(fig, file_name)
 
 
 def getBasisFromPosition(positionOnPlot):
@@ -298,7 +298,7 @@ def plot2DProjection():
             m.append(adjval[lin[i]][0])
         ax.plot(n, m, color="green", linewidth=2.0, linestyle="-")
 
-    showThenCloseAndDelFig(fig)
+    showThenCloseAndDelFig(fig, file_name)
 
 
 # ---------------------------------------------------------

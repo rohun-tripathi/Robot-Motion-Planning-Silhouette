@@ -13,9 +13,9 @@ def testPlottingFor4D():
     SH.init()
     debug = False
 
-    inputFile = "input4D.txt"
+    inputFile = "input/input4D.txt"
 
-    originList, ellipseList = processAndValidateInput.processInput(inputFile)
+    originList, ellipseList = processAndValidateInput.process_file_input(inputFile)
     context = CreateRoadContext.RoadContext()
     context.setEllipseListReturnSelf(ellipseList).setParentVectorReturnSelf([0 for x in range(SH.dim)]). \
         setOriginListReturnSelf(originList)
@@ -37,12 +37,12 @@ def test3DOneAngularObstacle():
     SH.init()
     debug = False
 
-    inputFile = "input3DOneAngular.txt"
+    inputFile = "input/input3DOneAngular.txt"
     # inputFile = "input3DThreeEllipsoidsOneAtAnAngle.txt"
     # inputFile = "input3D.txt"
 
 
-    originList, ellipseList = processAndValidateInput.processInput(inputFile)
+    originList, ellipseList = processAndValidateInput.process_file_input(inputFile)
 
     context = CreateRoadContext.RoadContext()
     context.setEllipseListReturnSelf(ellipseList).setParentVectorReturnSelf([0 for x in range(SH.dim)]). \
@@ -62,9 +62,9 @@ def testValidityFunction():
     SH.init()
     debug = False
 
-    inputFile = "input4D.txt"
+    inputFile = "input/input4D.txt"
 
-    originList, ellipseList = processAndValidateInput.processInput(inputFile)
+    originList, ellipseList = processAndValidateInput.process_file_input(inputFile)
     basicVector = [1,2,3,4]
     for i in range (50):
         basicVector[1] += 1
