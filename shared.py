@@ -1,5 +1,5 @@
 def init():
-    global errorOut, originlist, ellipselist, adjmatrix, adjcoordinates, valcount, num, dim, iterate, primA
+    global originlist, ellipselist, adjmatrix, adjcoordinates, valcount, num, dim, iterate, primA
 
     # the adjmatrix is the list of edges that being created
     adjmatrix = []
@@ -17,5 +17,3 @@ def init():
 
     num = 0
     dim = 0
-
-    errorOut = open("file_output/debuginfo.txt", "w")

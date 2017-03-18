@@ -50,8 +50,7 @@ def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, deb
     reduceEllipseDim = len(ellipse[0]) - 1  # n-1
 
     if len(center2nd) != reduceEllipseDim:
-        print "Error! len(center2nd) != reduceEllipseDim\nExiting"
-        sys.exit()
+        raise Exception("Error! len(center2nd) != reduceEllipseDim\nExiting")
 
     for irow in range(reduceEllipseDim):
         for icol in range(reduceEllipseDim):
@@ -64,7 +63,7 @@ def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, deb
     # A is the coefficients of the terms in the "B" matrix
     # Y is the constant term of each equation
 
-    A = [];
+    A = []
     Y = []
 
     for irow in range(reduceEllipseDim):
@@ -76,17 +75,9 @@ def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, deb
             A.append(mult.tolist())
 
     if debug:
-        print "A == "
         pprint.pprint(A)
 
-    if debug:
-        print "here"
-
     X = np.linalg.solve(A, Y)
-
-    if debug:
-        print "X == "
-        pprint.pprint(X)
 
     # produce the newmatrix
 
@@ -125,11 +116,9 @@ def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipsel
 
     if debug: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
 
-    newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, True)
+    newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, False)
     RecursionEllipses.append(newmatrix[:])
     RecursionOrigins.append(center2nd[:])
-
-    print considerlist
 
     for index, term in enumerate(considerlist):
         if term == 1:
@@ -138,11 +127,10 @@ def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipsel
             ellipse = ellipselist[index + 1]  # Accounting for the outer ellipse
             origin = originlist[index + 1]
 
-            newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, True)
+            newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, False)
 
             RecursionEllipses.append(newmatrix[:])
             RecursionOrigins.append(center2nd[:])
-    print "RecursionEllipses, RecursionOrigins == ", RecursionEllipses, RecursionOrigins
     return RecursionEllipses, RecursionOrigins
 
 

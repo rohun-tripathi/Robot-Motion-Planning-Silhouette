@@ -72,12 +72,6 @@ class path_finder_tk(Tkinter.Tk):
         self.obstacles_entry.insert('insert',
                                     '''-4 0 0\n1 0 0\n0 1 0\n0 0 1\n3 3 3\n\n4 0 0\n1 0 0\n0 1 0\n0 0 1\n3 3 3''')
 
-        self.increment_row_and_add_field_label(u"Save to File : ")
-        self.file_name_variable = Tkinter.StringVar()
-        self.file_name_entry = Tkinter.Entry(self, textvariable=self.file_name_variable)
-        self.file_name_entry.grid(column=1, row=self.row_number, sticky='EW', padx=5, pady=8)
-        self.file_name_variable.set("/home/riot/Desktop/roadmap")
-
         button = Tkinter.Button(self, text=u"Draw Silhouette Curves", command=self.on_compute_road_map)
         button.grid(column=0, row=self.increment_row_number())
 
@@ -144,13 +138,12 @@ class path_finder_tk(Tkinter.Tk):
             return
 
         try:
-            file_name = str(self.file_name_entry.get()).strip()
-            file_name = "foo" if file_name == "" else file_name
+            file_name = "foo"
 
             main.run_silhouette_method(input_lines, file_name)
             self.set_console_label_value("Road Map computation Done.")
         except Exception as e:
-            self.set_console_label_value("Could Not Compute Road Map. Please check parameter values.")
+            self.set_console_label_value("Generation Failed. Please check parameters.\n Error Reason (Exception): " + str(e))
 
         self.dimEntry.focus_set()
         self.dimEntry.selection_range(0, Tkinter.END)

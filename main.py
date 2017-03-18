@@ -1,12 +1,15 @@
 # !usr/bin/env python
-import processAndValidateInput
+import sys
+
+import CreateRoadContext
 import plot as myplt
+import processAndValidateInput
 import roadmap as roadmap
 import shared as SH
-import CreateRoadContext
 from djikstra import Digraph
 
 
+# This Function is the main thing that runs through it completely.
 def plot_point_as_well():
     START = "start"
     END = "end"

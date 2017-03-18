@@ -52,7 +52,7 @@ def plot3DEllipseAndGraph(num, ellips, ellarr, tree, adjval, file_name="foo.png"
 
 
 def showThenCloseAndDelFig(fig, file_name):
-    plt.savefig(file_name)
+    #plt.savefig(file_name)
     plt.show()
     del fig
 
@@ -223,7 +223,6 @@ def plot2DProjection():
         subspace.append(vector)
     basis = []
     basis = gs(subspace)
-    print basis
     basis = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
 
     # ---------------------------------

@@ -1,4 +1,3 @@
-import sys
 from copy import deepcopy
 
 import auxilary
@@ -79,9 +78,7 @@ def createRoad(context, debug=False):
 
         if len(criticalPointsForSlice) == 0: continue
         if len(criticalPointsForSlice) > 1:
-            print "System Limitation. We are just working with one critical point between two slices presently. A solution could be to increase the iterate variable, so slices come closer"
-            print "It could be be the critical points from higher dimension and this one are crowding together."
-            sys.exit(0)
+            raise Exception("System Limitation. We are just working with one critical point between two slices presently. A solution could be to increase the iterate variable, so slices come closer. It could be be the critical points from higher dimension and this one are crowding together.")
 
         if (SHARED.dim - traversalAxis) == 2:  # 2D case - Base Case
             pastVector = connectCPInBase2DCase(criticalPointsForSlice, pastVector, vectorsToLink, sliceVector,
@@ -93,10 +90,6 @@ def createRoad(context, debug=False):
                                                 debug, ellipseMatrixList, originList, pastVector, sliceVector,
                                                 traversalAxis)
 
-    for edgeindex, edge in enumerate(SHARED.adjmatrix):
-        print >> SHARED.errorOut, edgeindex, "edge == ", edge
-    for coorindex, coor in enumerate(SHARED.adjcoordinates):
-        print >> SHARED.errorOut, coorindex, "coor == ", coor
     return vectorsToLink
 
 
@@ -232,8 +225,7 @@ def findIntersectionPointsBetweenEllipseAndSlice(axisToCheckIntersectionAlong, e
                                                                  axisToCheckIntersectionAlong)
     if valid == 1:
         if solution[0] == solution[1]:
-            print "Check2, Error! This is not supposed to happen, both the solutions are equal."
-            sys.exit(0)
+            raise Exception("Check2, Error! This is not supposed to happen, both the solutions are equal.")
         for sol in solution:
             vector[traversalAxis + 1] = sol
             VectorNum = rd.addToVerticesUsingContext(vector, context)
