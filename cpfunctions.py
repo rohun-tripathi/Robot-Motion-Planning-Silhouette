@@ -14,111 +14,82 @@ import CriticalPointsDetail
 LARGE_VALUE = sys.maxsize
 
 
-def ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, debug=False):
-    topcorner = ellipse[0][0]
-    planeState = CPslicevector[travaxis]
-    highercenter = origin[0]
-    # denom = 1 - aii (a - ci ) ^ 2
-    denominator = 1 - topcorner * (planeState - highercenter) * (planeState - highercenter)
+def extract_matrix(X, reduced_dim):
+    result_matrix = []
+    for row_iterator in range(reduced_dim):
+        temp = []
+        for col_iterator in range(reduced_dim):
+            temp.append(X[row_iterator * reduced_dim + col_iterator])
+        result_matrix.append(temp)
 
-    if debug: print "topcorner, planeState, highercenter == ", topcorner, planeState, highercenter
-    if debug: print "denominator == ", denominator, "\n"
+    return result_matrix
 
-    firstcenter = np.array(origin[1:])
-    trans = firstcenter.T
-    oldmatrix = np.array([x[1:] for x in ellipse[1:]])
-    if debug: print "Firstcenter, it's trans, oldmatrix == ", firstcenter, trans, oldmatrix
 
-    value = np.dot(np.dot(trans, oldmatrix), firstcenter)
-    denominator = denominator - value
+def reduce_ellipsoid(array_along_y_z, critical_slice_vector, traversal_axis, ellipsoid, origin):
 
-    if debug: print value
-    if debug: print "denominator == ", denominator, "\n"
+    reduced_dim = len(ellipsoid[0]) - 1
+    if len(array_along_y_z) != reduced_dim:
+        raise Exception("Error! len(reduced_center) != reduced_dim\nExiting")
 
-    firstrowA = np.array(ellipse[0][1:])
-    trans = firstrowA.T
-    denominator = denominator + 2 * (planeState - highercenter) * np.dot(trans, firstcenter)
+    top_corner = ellipsoid[0][0]
+    critical_point = critical_slice_vector[traversal_axis]
+    top_most_center = origin[0]
 
-    if debug: print "denominator == ", denominator, "\n"
+    initial_matrix = np.array([x[1:] for x in ellipsoid[1:]])
 
-    center2nd = np.array(arrayYZ)
-    trans = center2nd.T
-    # numerator = 1 - np.dot(trans, center2nd) #This is the mistake
+    # denominator = 1 - aii (a - ci ) ^ 2
+    denominator = 1 - top_corner * (critical_point - top_most_center) * (critical_point - top_most_center)
 
-    arrayofD = []
+    initial_center = np.array(origin[1:])
+    value = np.dot(np.dot(initial_center.T, initial_matrix), initial_center)
+    denominator -= value
 
-    reduceEllipseDim = len(ellipse[0]) - 1  # n-1
+    first_row = np.array(ellipsoid[0][1:])
+    denominator += 2 * (critical_point - top_most_center) * np.dot(first_row.T, initial_center)
 
-    if len(center2nd) != reduceEllipseDim:
-        raise Exception("Error! len(center2nd) != reduceEllipseDim\nExiting")
+    reduced_center = np.array(array_along_y_z)
+    # transpose_center = reduced_center.T
+    # This was the mistake
+    # numerator = 1 - np.dot(transpose_center, reduced_center)
 
-    for irow in range(reduceEllipseDim):
-        for icol in range(reduceEllipseDim):
-            arrayofD.append(center2nd[irow] * center2nd[icol])
+    stretched_center = []
 
-    if debug: print "arrayofD == ", arrayofD
+    for row_iterator in range(reduced_dim):
+        for col_iterator in range(reduced_dim):
+            stretched_center.append(reduced_center[row_iterator] * reduced_center[col_iterator])
 
     # begins the preparation for equation. AX = Y
-    # X in the equations is the terms of the "B" metrix (for the ellipse in the lower dim)  len -> (n-1) * (n-1)
+    # X in the equations is the terms of the "B" matrix (for the ellipse in the lower dim)  len -> (n-1) * (n-1)
     # A is the coefficients of the terms in the "B" matrix
     # Y is the constant term of each equation
 
     A = []
     Y = []
 
-    for irow in range(reduceEllipseDim):
-        for icol in range(reduceEllipseDim):
-            apq = ellipse[1 + irow][1 + icol]
-            Y.append(apq)  # Accounting for the lowering in dimensions
-            mult = np.multiply(apq, arrayofD)
-            mult[(irow) * reduceEllipseDim + icol] += denominator
-            A.append(mult.tolist())
-
-    if debug:
-        pprint.pprint(A)
+    for row_iterator in range(reduced_dim):
+        for col_iterator in range(reduced_dim):
+            initial_matrix_term = ellipsoid[1 + row_iterator][1 + col_iterator]
+            Y.append(initial_matrix_term)  # Accounting for the lowering in dimensions
+            result = np.multiply(initial_matrix_term, stretched_center)
+            result[row_iterator * reduced_dim + col_iterator] += denominator
+            A.append(result.tolist())
 
     X = np.linalg.solve(A, Y)
-
-    # produce the newmatrix
-
-    newmatrix = []
-    for irow in range(reduceEllipseDim):
-        temp = []
-        for icol in range(reduceEllipseDim):
-            temp.append(X[irow * reduceEllipseDim + icol])
-        newmatrix.append(temp)
-
-    # tempellise = deepcopy(ellipse)
-
-    # newmatrix = [x[1:] for x in tempellise[1:]  ]
-    # if debug: print "Original	 newmatrix is == ",newmatrix
-    # for col in range( len(newmatrix)):
-    # 	for row in range( len(newmatrix[0]) ):
-    # 		newmatrix[row][col] = newmatrix[row][col] * numerator/denominator
-    # center2nd = arrayYZ
-
-    # if debug: print "Obtained newmatrix is == ",newmatrix
-    # if debug: print center2nd
-
-    return newmatrix, center2nd
+    return extract_matrix(X, reduced_dim), reduced_center
 
 
 def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipselist, originlist, debug=False):
-    if debug: print "considerlist == ", considerlist
-    if debug: print "considerYZ == ", considerYZ
-    RecursionEllipses = []
-    RecursionOrigins = []
+    recursion_ellipsoids = []
+    recursion_origins = []
 
     # The first (outer) Ellipse
     arrayYZ = CPslicevector[(travaxis + 1):]
     ellipse = deepcopy(ellipselist[0])
     origin = originlist[0]
 
-    if debug: print "Original ellipse and origin and CPslicevector == ", ellipse, origin, CPslicevector
-
-    newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, False)
-    RecursionEllipses.append(newmatrix[:])
-    RecursionOrigins.append(center2nd[:])
+    reduced_matrix, center2nd = reduce_ellipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin)
+    recursion_ellipsoids.append(reduced_matrix[:])
+    recursion_origins.append(center2nd[:])
 
     for index, term in enumerate(considerlist):
         if term == 1:
@@ -127,11 +98,11 @@ def ReduceEllipsoids(considerlist, considerYZ, CPslicevector, travaxis, ellipsel
             ellipse = ellipselist[index + 1]  # Accounting for the outer ellipse
             origin = originlist[index + 1]
 
-            newmatrix, center2nd = ReduceSingleEllipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin, False)
+            reduced_matrix, center2nd = reduce_ellipsoid(arrayYZ, CPslicevector, travaxis, ellipse, origin)
 
-            RecursionEllipses.append(newmatrix[:])
-            RecursionOrigins.append(center2nd[:])
-    return RecursionEllipses, RecursionOrigins
+            recursion_ellipsoids.append(reduced_matrix[:])
+            recursion_origins.append(center2nd[:])
+    return recursion_ellipsoids, recursion_origins
 
 
 def retrieveCriticalPointsFromHigherLevel(critical, presentslice, nextslice, debug=False):
