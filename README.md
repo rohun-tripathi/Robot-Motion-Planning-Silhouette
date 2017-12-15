@@ -7,6 +7,16 @@ All obstacles and the boundary are modeled using ellipsoids as modeling of real-
 
 #### Examples
 
+3D - 
+
+![alt text](https://github.com/rohun-tripathi/UGP-Robotics/blob/master/idealOneObstacle.png?raw=true)
+![alt text](https://github.com/rohun-tripathi/UGP-Robotics/blob/master/3Obstacles3D1.png?raw=true)
+![alt text](https://github.com/rohun-tripathi/UGP-Robotics/blob/master/3Obstacles3D3.png?raw=true)
+
+4D to 3D projections - 
+
+![alt text](https://github.com/rohun-tripathi/UGP-Robotics/blob/master/4D.png?raw=true)
+
 #### Input
 The input files are named as such. The general formulation is:
 First line : the first integer is the number of obstacles and the second integer is the number of dimensions
