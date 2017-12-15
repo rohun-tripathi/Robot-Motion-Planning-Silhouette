@@ -1,44 +1,31 @@
-Read this README to gain an idea about the functiosn of different files : 
+### Robot Motion Planning in dimensions greater than 3D.
 
-The RecursionPoints function can be improved. It does not account for the obstacle that starts and ends between two slices.
+#### Implementation
+The implementation is in Python and from scratch.
 
-Lists that are screwing with me:
-StateList - [0 for x in range( len(ellipselist) )]
-This makes it for ALL the ellipsoids that collide with slice in question
+All obstacles and the boundary are modeled using ellipsoids as modeling of real-world obstacles as ellipsoids is a solved problem.
 
-The retrunvec list in the createroad function. This function has three lists of its own. The first is the normal inersection points of the recursion that have to be conencted to the pastvector when the recursion returns. The second and third are for the critical points. The firts of those are only to be added to the future slices and not this one. The third is the critical points that are the end of an ellipse and are not to added to future vectors, just pastvectors.
+#### Examples
 
-1. auxilary.py : this contains auxilary functios used by the other python files
-2. auxilary_backup is just a copy of the above file. Last checked it was the same file on 27th Feb 4:32
-
-3. trial.py 
-
-
-##############################
-INPUT FILE FORMAT
+#### Input
 The input files are named as such. The general formulation is:
 First line : the first integer is the number of obstacles and the second integer is the number of dimensions
-#################
 
-##Inout Explained
-# This is a global variable that dictates tha state of the slice wrt to different ellipses
+#### Motivation
+The Silhouette method is complete. Hence, finding a path using the same and then optimizing it helps ensure completeness of the planning method. It improves on methods that use Heuristics to find a path, but lack a guarantee of completeness.
 
-# State 1 : means the slice is intersecting and had intersected in the last slice.
-# State 2 : means the slice has just started intersecting
-# State 3 : means the slice has just stopped intersecting
-# State 0 : means the slice is NOT intersecting and had NOT interseted in the last slice 
+#### Installation
+Clone this repo, it uses python 2.7 and its associate libraries.
 
-The complement.py has this function of name "f" but all it does is return 1 and the system is working at this stage. So don't worry about it.
+#### Performance
+The Silhouette method is complete. Hence if a path exists from the start to the goal point, it will find it.
 
+#### Usability
+This project contains a python based GUI that is also portable, such that this software can run on any system, even one that do not have a python installation.
 
-## This the introduction, a readme of sorts
-#ellips is a list of lists. List of the origins of the nth ellipse
-#ellarr stores the A matrix for diff ellipses
+#### The MIT License
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-#primA stores the terms for the primary axis. The one to traverse along on the first iteration
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-#Presslice is to avoid any kind of recursion in first slice due to change in Critical points, the starting point
-
-#ELLINQUES:
-# This variable is used temporarily and under the assumption that only one new ellipse will be encompassed in a slice
-# Can use inout array instead if there multiple such cases
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
